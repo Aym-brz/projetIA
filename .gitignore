@@ -1,6 +1,5 @@
-# Ignorer les répertoires générés par colcon
-
-
-# Fichiers temporaires
+build/
+install/
+log/
 *.pyc
 __pycache__/
