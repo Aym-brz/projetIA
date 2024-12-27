@@ -68,21 +68,12 @@ project_root/
 
 ## Usage
 
-1. Launch the Gazebo simulation with ROS 2 bridge and Soar integration:
+1. Launch the Gazebo simulation with ROS 2 bridge
    ```bash
-   ros2 launch your_package_name launch.py
+   ros2 launch projetIA pendulum.launch.py
    ```
 
-2. Modify the `config/bridge_config.yaml` file to customize sensor or control topics.
-
-3. Training logic can be updated in the Soar rules files.
-
-4. Run the reinforcement learning loop by subscribing to the topics:
-   - **Input:** Angular and linear velocities, positions from the pendulum.
-   - **Output:** Force commands for the rail's actuator.
-
 ## Training Methodology
-
 The pendulum starts in a random initial position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations and controlling velocities.
 
 ### Reward Function
@@ -92,9 +83,4 @@ The reward is calculated as:
   - Maintaining angles near the upright position for both pendulum links.
   - Minimizing velocities (both angular and linear).
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
-
-## Contributing
-
-Contributions to improve the model, reward function, or ROS integration are welcome! Feel free to open a pull request or file an issue.
-
 
