@@ -1,6 +1,8 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import ExecuteProcess
+from launch.actions import DeclareLaunchArgument
+from ros_gz_bridge.actions import RosGzBridge
 import os
 
 def generate_launch_description():
@@ -15,11 +17,9 @@ def generate_launch_description():
     
     # Gazebo server process
     gazebo_server = ExecuteProcess(
-        cmd=['gz', 'sim', model_path],
-        output='screen'
-    )
+        cmd=['gz', 'sim', model_path])
 
-    # ROS-Gazebo bridge utilisant le fichier YAML
+    """     # ROS-Gazebo bridge utilisant le fichier YAML
     ros_gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -28,5 +28,16 @@ def generate_launch_description():
     
     return LaunchDescription([
         gazebo_server,
+        ros_gz_bridge,
+    ]) """
+    # Bridge
+    ros_gz_bridge = RosGzBridge(
+        bridge_name='ros_gz_bridge',
+        config_file=bridge_config_path)
+
+    return LaunchDescription([
+        gazebo_server,
+        DeclareLaunchArgument('rqt', default_value='true',
+                              description='Open RQt.'),
         ros_gz_bridge,
     ])
