@@ -76,22 +76,19 @@ project_root/
    ```bash
    ros2 launch projetIA pendulum.launch.py
    ```
-2. From another terminal, data can be retreived 
+2. From another terminal, data can be retreived :
+   - Angles and rotation speeds of joints can be found on the ROS topic /tf:
+   ```bash
+   ros2 topic echo /tf
+   ```
+   - Position and velocity of parts can be found on the ROS topic /joint_states:
    ```bash
    ros2 topic echo /joint_states
    ```
-
-## TODO
-- Add the possibility to apply a force to the base of the pendulum
-- Receive the angle and speed of the joints in pytorch
-- Send forces to the model from pytorch
-- Create the policy (reward function)
-- Train the model
-
 ## Training Methodology
 The pendulum starts in a random initial position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations and controlling velocities.
 
-### Reward Function
+## Reward Function
 
 The reward is calculated as:
 - **Positive Terms**:
@@ -99,3 +96,9 @@ The reward is calculated as:
   - Minimizing velocities (both angular and linear).
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
+## TODO
+- Add the possibility to apply a force to the base of the pendulum
+- Receive the angle and speed of the joints in pytorch
+- Send forces to the model from pytorch
+- Create the policy (reward function)
+- Train the model

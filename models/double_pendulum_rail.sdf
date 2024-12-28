@@ -73,12 +73,12 @@
       </link>
 
       <!-- support -->
-      <link name="base">
+      <link name="trolley">
         <pose>0 0 4 0 0 0</pose>
         <inertial>
           <mass>100</mass>
         </inertial>
-        <visual name="vis_base_on_rail">
+        <visual name="vis_trolley_on_rail">
           <pose>0 0 0 0 0 0</pose>
           <geometry>
             <box>
@@ -151,7 +151,7 @@
 
       <!-- pin joint for upper link, at origin of upper link -->
       <joint name="upper_joint" type="revolute">
-        <parent>base</parent>
+        <parent>trolley</parent>
         <child>upper_link</child>
         <axis>
           <xyz>1.0 0 0</xyz>
@@ -166,9 +166,9 @@
         </axis>
       </joint>
 
-      <joint name="rail_joint" type="prismatic">
+      <joint name="rail_trolley_joint" type="prismatic">
         <parent>rail</parent>
-        <child>base</child>
+        <child>trolley</child>
         <axis>
           <xyz>0 1.0 0</xyz>
           <limit>
@@ -194,7 +194,8 @@
       <plugin
         filename="ignition-gazebo-joint-controller-system"
         name="ignition::gazebo::systems::JointController">
-        <joint_name>rail_joint</joint_name>
+        <joint_name>rail_trolley_joint</joint_name>
+         <initial_velocity>0.0</initial_velocity>
         <min_position>-2.0</min_position>
         <max_position>2.0</max_position>
       </plugin>

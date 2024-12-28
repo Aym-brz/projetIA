@@ -7,14 +7,14 @@
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/tf"
-  gz_topic_name: "/model/double_pendulum_rail0/pose"
+  gz_topic_name: "/model/double_pendulum_rail/pose"
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   lazy: true
   direction: GZ_TO_ROS
 
-- ros_topic_name: "/apply_force"
-  gz_topic_name: "/model/double_pendulum_rail/apply_force"
+- ros_topic_name: "/trolley_speed_cmd"
+  gz_topic_name: "/model/double_pendulum_rail/joint/rail_trolley_joint/cmd_vel"
   ros_type_name: "geometry_msgs/msg/Wrench"
   gz_type_name: "gz.msgs.Wrench"
   lazy: true
