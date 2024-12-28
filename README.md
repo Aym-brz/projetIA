@@ -1,10 +1,24 @@
-Documentation pour installer gazebo et ros : utiliser ros2 jazzy et gazebo harmonic  
+Installation des elements nécessaires
+Documentation pour installer gazebo et ros : utiliser ros2 jazzy et gazebo harmonic en suivant ceci : https://gazebosim.org/docs/all/ros_installation/
 
 Installation de ROS jazzy 
 https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html 
 
 installation de gazebo harmonic : 
 https://gazebosim.org/docs/harmonic/install_windows/ 
+
+Création d'un workspace (https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html) et d'un package (https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html) ros 
+
+à partir des fichiers de démo: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_sim_demos
+
+création du fichier pour décrire le pendule et son environment
+création du fichier bridge_config.yaml, pour faire le lien entre gazebo et ROS
+création du fichier pendulum.launch.py, qui lance la simulation avec ROS et gazebo reliés.
+=> le double pendule est simulé et publie les positions et vitesse sur les topics ROS
+
+création du fichier speed_publisher.py, mise à jour de bridge_config.yaml et pendulum.launch.py et setup.py pour définir le fichier speed_publisher comme porte entrée. 
+=> le double pendule bouge à la vitesse définie initialement dans speed_publisher
+
 
 # Double Pendulum on Rail Simulation
 
@@ -81,6 +95,17 @@ projectroot
    ```bash
    ros2 topic echo /joint_states
    ```
+3. the velocity of the trolley can be set by publishing a float to the topic /trolley_speed_cmd:
+   ```bash
+   ros2 topic pub /trolley_speed_cmd std_msgs/msg/Float64 "data: 4.0"
+   ```
+
+   A publisher Node for the speed can be created by :
+   ```bash
+   ros2 run projetIA speed_publisher
+   ```
+
+
 ## Training Methodology
 The pendulum starts in a random initial position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations and controlling velocities.
 
@@ -93,8 +118,8 @@ The reward is calculated as:
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
 ## TODO
-- Add the possibility to apply a force to the base of the pendulum
+- Add possibility to change the speed of the trolley
 - Receive the angle and speed of the joints in pytorch
-- Send forces to the model from pytorch
+- Send trolley speed to the model from pytorch
 - Create the policy (reward function)
 - Train the model

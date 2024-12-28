@@ -26,17 +26,17 @@ def generate_launch_description():
         config_file=bridge_config_path)
     
     # SpeedPublisher node
-    speed_publisher_node = Node(
-        package='projetIA',
-        executable='speed_publisher',
-        name='speed_publisher',
-        output='screen'
-    )
+    # speed_publisher_node = Node(
+    #     package='projetIA',
+    #     executable='speed_publisher',
+    #     name='speed_publisher',
+    #     output='screen'
+    # )
 
     return LaunchDescription([
         gazebo_server,
         DeclareLaunchArgument('rqt', default_value='true',
                               description='Open RQt.'),
         ros_gz_bridge, 
-        speed_publisher_node
+        # speed_publisher_node
     ])

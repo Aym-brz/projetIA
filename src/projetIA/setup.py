@@ -1,4 +1,3 @@
-# filepath: /home/aymeric/Documents/projetIA/setup.py
 from setuptools import setup
 import os
 from glob import glob

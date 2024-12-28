@@ -15,7 +15,7 @@ class SpeedPublisher(Node):
         super().__init__('speed_publisher')
         self.publisher_ = self.create_publisher(Float64, '/trolley_speed_cmd', 10)
         self.timer = self.create_timer(0.1, self.timer_callback)
-        self.speed = 1.0  # Initial speed value
+        self.speed = 0.0  # Initial speed value
         # self.srv = self.create_service(SetFloat, 'set_speed', self.set_speed_callback)  # Create the service
 
     # def set_speed_callback(self, request, response):
