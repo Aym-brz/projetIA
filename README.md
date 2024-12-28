@@ -19,6 +19,10 @@ création du fichier pendulum.launch.py, qui lance la simulation avec ROS et gaz
 création du fichier speed_publisher.py, mise à jour de bridge_config.yaml et pendulum.launch.py et setup.py pour définir le fichier speed_publisher comme porte entrée. 
 => le double pendule bouge à la vitesse définie initialement dans speed_publisher
 
+crétion du fichier state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
+=> reste à extraire les bonnes données
+
+fait par github copilot et pas encore testé : pendulum_env et train_pendulum
 
 # Double Pendulum on Rail Simulation
 
@@ -72,6 +76,7 @@ projectroot
 │   │   └── pendulum.launch.py      
 │   ├── projetIA/                   # Python library for the project
 │   │   └── speed_publisher.py      # ROS node to publish the speed of the trolley
+│   │   └── state_subscriber.py     # ROS node to read the speeds and positions
 │   ├── scripts/                    # Contains training scripts
 │   │   └── train.py                # Training policy
 │   ├── README.md                   # Documentation
@@ -87,14 +92,19 @@ projectroot
    ros2 launch projetIA pendulum.launch.py
    ```
 2. From another terminal, data can be retreived :
-   - Angles and rotation speeds of joints can be found on the ROS topic /tf:
+   - Thanks to a Node subscribed to the right topics
    ```bash
-   ros2 topic echo /tf
+   ros2 run projetIA state_subscriber
    ```
-   - Position and velocity of parts can be found on the ROS topic /joint_states:
-   ```bash
-   ros2 topic echo /joint_states
-   ```
+   - Manually 
+      - Angles and rotation speeds of joints can be found on the ROS topic /tf:
+      ```bash
+      ros2 topic echo /tf
+      ```
+      - Position and velocity of parts can be found on the ROS topic /joint_states:
+      ```bash
+      ros2 topic echo /joint_states
+      ```
 3. the velocity of the trolley can be set by publishing a float to the topic /trolley_speed_cmd:
    ```bash
    ros2 topic pub /trolley_speed_cmd std_msgs/msg/Float64 "data: 4.0"
@@ -118,6 +128,7 @@ The reward is calculated as:
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
 ## TODO
+- Fix the state_subscriber so that the data extracted is correct
 - Add possibility to change the speed of the trolley
 - Receive the angle and speed of the joints in pytorch
 - Send trolley speed to the model from pytorch
