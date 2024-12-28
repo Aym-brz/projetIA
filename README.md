@@ -55,12 +55,16 @@ Before running the project, ensure you have the following installed, following t
 
 ```plaintext
 project_root/
-├── config/
-│   └── bridge_config.yaml      # Configuration for the ros_gz bridge
-├── models/
-│   └── double_pendulum_rail.sdf  # SDF model for the pendulum system
-├── launch/
-│   └── pendulum.launch.py      # Launch file for the simulation
+├── config/                     # Contains cfiguration files
+│   └── bridge_config.yaml      
+├── models/                     # Contains SDF models
+│   └── double_pendulum_rail.sdf  
+├── launch/                     # Contains launch files for the simulation
+│   └── pendulum.launch.py      
+├── nodes/                      # Contains ROS nodes
+│   └── force_publisher.py      
+├── scripts/                    # Contains training scripts
+│   └── train.py                # Training policy
 ├── README.md                   # Documentation
 ├── CMAkesLists.txt             # Setup script for the ROS 2 package
 └── package.xml                 # ROS 2 package metadata
@@ -72,6 +76,17 @@ project_root/
    ```bash
    ros2 launch projetIA pendulum.launch.py
    ```
+2. From another terminal, data can be retreived 
+   ```bash
+   ros2 topic echo /joint_states
+   ```
+
+## TODO
+- Add the possibility to apply a force to the base of the pendulum
+- Receive the angle and speed of the joints in pytorch
+- Send forces to the model from pytorch
+- Create the policy (reward function)
+- Train the model
 
 ## Training Methodology
 The pendulum starts in a random initial position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations and controlling velocities.

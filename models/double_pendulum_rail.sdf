@@ -47,7 +47,7 @@
       </link>
     </model>
 
-    <model name="double_pendulum_on_rail">
+    <model name="double_pendulum_rail">
       <!-- rail -->
       <link name="rail">
         <pose>0 0 4 0 0 0</pose>
