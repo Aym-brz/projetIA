@@ -1,18 +1,11 @@
 Documentation pour installer gazebo et ros : utiliser ros2 jazzy et gazebo harmonic  
 
-
 Installation de ROS jazzy 
 https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html 
 
 installation de gazebo harmonic : 
 https://gazebosim.org/docs/harmonic/install_windows/ 
 
- 
-Création d’un fichier pour le robot (géométrie du robot, articulations, aspect):
-double_pendulum_rail.sdf
-
-Création d'un fichier pour le monde par défaut (taille, luminosité,...):
-default_worlf.sdf
 # Double Pendulum on Rail Simulation
 
 This project aims to simulate and train a double pendulum on a rail to balance itself in an inverted position using reinforcement learning. The simulation is implemented in Gazebo and Pytorch, with ROS 2 serving as the middleware interface.
@@ -54,20 +47,23 @@ Before running the project, ensure you have the following installed, following t
 ## Project Structure
 
 ```plaintext
-project_root/
-├── config/                     # Contains cfiguration files
-│   └── bridge_config.yaml      
-├── models/                     # Contains SDF models
-│   └── double_pendulum_rail.sdf  
-├── launch/                     # Contains launch files for the simulation
-│   └── pendulum.launch.py      
-├── nodes/                      # Contains ROS nodes
-│   └── force_publisher.py      
-├── scripts/                    # Contains training scripts
-│   └── train.py                # Training policy
-├── README.md                   # Documentation
-├── CMAkesLists.txt             # Setup script for the ROS 2 package
-└── package.xml                 # ROS 2 package metadata
+projectroot
+├── src/
+│   ├── config/                     # Contains configuration files
+│   │   └── bridge_config.yaml      
+│   ├── models/                     # Contains SDF models
+│   │   └── double_pendulum_rail.sdf  # Description of the robot (geometry, joints, aspect, environment)
+│   │   └── default_world.sdf       # Default empty environment
+│   ├── launch/                     # Contains launch files for the simulation
+│   │   └── pendulum.launch.py      
+│   ├── projetIA/                   # Python library for the project
+│   │   └── speed_publisher.py      # ROS node to publish the speed of the trolley
+│   ├── scripts/                    # Contains training scripts
+│   │   └── train.py                # Training policy
+│   ├── README.md                   # Documentation
+│   ├── setup.py                    # Setup script for the ROS 2 package
+│   └── package.xml                 # ROS 2 package metadata
+└── README.md
 ```
 
 ## Usage

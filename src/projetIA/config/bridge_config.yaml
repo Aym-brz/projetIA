@@ -15,7 +15,7 @@
 
 - ros_topic_name: "/trolley_speed_cmd"
   gz_topic_name: "/model/double_pendulum_rail/joint/rail_trolley_joint/cmd_vel"
-  ros_type_name: "geometry_msgs/msg/Wrench"
-  gz_type_name: "gz.msgs.Wrench"
+  ros_type_name: "float64"
+  gz_type_name: "gz.msgs.Double"
   lazy: true
   direction: ROS_TO_GZ

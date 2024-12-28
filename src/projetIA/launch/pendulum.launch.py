@@ -19,15 +19,24 @@ def generate_launch_description():
     # Gazebo server process
     gazebo_server = ExecuteProcess(
         cmd=['gz', 'sim', model_path])
-   
+    
     # Bridge
     ros_gz_bridge = RosGzBridge(
         bridge_name='ros_gz_bridge',
         config_file=bridge_config_path)
+    
+    # SpeedPublisher node
+    speed_publisher_node = Node(
+        package='projetIA',
+        executable='speed_publisher',
+        name='speed_publisher',
+        output='screen'
+    )
 
     return LaunchDescription([
         gazebo_server,
         DeclareLaunchArgument('rqt', default_value='true',
                               description='Open RQt.'),
-        ros_gz_bridge
+        ros_gz_bridge, 
+        speed_publisher_node
     ])

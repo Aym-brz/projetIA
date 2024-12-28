@@ -195,7 +195,7 @@
         filename="ignition-gazebo-joint-controller-system"
         name="ignition::gazebo::systems::JointController">
         <joint_name>rail_trolley_joint</joint_name>
-         <initial_velocity>0.0</initial_velocity>
+        <initial_velocity>0.0</initial_velocity>
         <min_position>-2.0</min_position>
         <max_position>2.0</max_position>
       </plugin>
