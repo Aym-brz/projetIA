@@ -36,13 +36,67 @@ This project aims to simulate and train a double pendulum on a rail to balance i
 
 ## Prerequisites
 
-Before running the project, ensure you have the following installed, following these instructions: 
-    [Installation instructions](https://gazebosim.org/docs/all/ros_installation/)
+Requires python 3
 
+Before running the project, ensure you have python 3 installed, as well as:
 1. **ROS 2** (version jazzy)  
-   [Installation instructions](https://docs.ros.org/en/jazzy/Installation/)  
 2. **Gazebo** (version harmonic)  
-   [Installation instructions](https://gazebosim.org/docs/harmonic/)  
+3. **ros-gazebo bridge** 
+
+The following instructions work for Ubuntu 24.04 LTS (Noble)
+
+### Install ROS 2 Jazzy 
+[Installation instructions](https://docs.ros.org/en/jazzy/Installation/)
+
+Make sure you have a locale which supports UTF-8. If you are in a minimal environment (such as a docker container), the locale may be something minimal like POSIX.
+```bash
+locale  # check for UTF-8
+```
+You will need to add the ROS 2 apt repository to your system.
+First ensure that the Ubuntu Universe repository is enabled.
+```bash
+sudo apt install software-properties-common
+sudo add-apt-repository universe
+```
+Now add the ROS 2 GPG key with apt.
+```bash
+sudo apt update && sudo apt install curl -y
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+```
+Then add the repository to your sources list.
+```bash
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+```
+Update your apt repository caches after setting up the repositories.
+```bash
+sudo apt update
+sudo apt upgrade
+```
+Desktop Install (Recommended): ROS, RViz, demos, tutorials.
+```bash
+sudo apt install ros-jazzy-desktop
+```
+
+### Install Gazebo Harmonic 
+[Installation instructions](https://gazebosim.org/docs/harmonic/install_ubuntu/) 
+
+```bash
+sudo apt-get install curl lsb-release gnupg
+sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+sudo apt-get update
+sudo apt-get install gz-harmonic
+```
+All Gazebo should be ready to use and the gz sim app ready to be executed.
+
+### Install the bridge between Gazebo and ROS 
+[Installation instructions](https://gazebosim.org/docs/all/ros_installation/)
+
+The following command will install the correct version of Gazebo and ros_gz for your ROS installation on a Linux system. 
+```bash
+sudo apt-get install ros-jazzy-ros-gz
+```
+
 
 ## Installation
 
