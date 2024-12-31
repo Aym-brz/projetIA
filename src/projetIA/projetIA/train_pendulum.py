@@ -17,7 +17,7 @@ class Policy(nn.Module):
         )
         
     def forward(self, x):
-        return self.network(x) * 2.0  # scale to action space [-2.0, 2.0]
+        return self.network(x) * 100  # scale to action space
 
 def train():
     env = PendulumEnv()

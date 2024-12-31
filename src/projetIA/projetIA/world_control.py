@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 import time
-from ros_gz_interfaces.srv import ControlWorld  # Example service, replace with the actual service used by Gazebo
+from ros_gz_interfaces.srv import ControlWorld
 
 class GazeboControlClient(Node):
     def __init__(self):

@@ -8,6 +8,7 @@ from std_srvs.srv import Empty
 from sensor_msgs.msg import JointState
 from tf2_msgs.msg import TFMessage
 import math
+from world_control import GazeboControlClient
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self):
@@ -21,6 +22,8 @@ class PendulumEnv(gym.Env, Node):
         
         self.state = np.zeros(6)
         self.done = False
+        
+        self.gazebo_control_client = GazeboControlClient()
         
     def joint_state_callback(self, msg):
         self.state[:] = [msg.position[0]%np.pi*180/np.pi, msg.velocity[0]*180/np.pi,  # upper joint position [-180° to +180°] and velocity [°/s]
@@ -39,7 +42,6 @@ class PendulumEnv(gym.Env, Node):
                 - done (bool): A boolean indicating whether the episode has ended.
                 - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
-        
         msg = Float64()
         msg.data = float(action[0])
         self.publisher.publish(msg)
@@ -54,10 +56,17 @@ class PendulumEnv(gym.Env, Node):
         return self.state, reward, done, {}
         
     def reset(self):
-        # TODO Implement reset logic
-
-        # https://gazebosim.org/api/sim/8/reset_simulation.html
+        """
+        Reset the simulation to its initial state.
+        Returns:
+            numpy.ndarray: The initial state of the environment.
+        """
+        # Reset the simulation
+        self.gazebo_control_client.send_control_request(pause=False, reset=True)
+        # Reset the state
         self.state = np.zeros(6)
+        self.done = False
+        
         return self.state
 
 def main():
@@ -66,4 +75,4 @@ def main():
 
 if __name__=="__main__":
     main()
-    
+
