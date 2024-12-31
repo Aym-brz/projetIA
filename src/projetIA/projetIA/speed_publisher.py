@@ -7,7 +7,6 @@ ros2 service call /set_speed std_srvs/srv/SetFloat "{data: 1.5}"
 """
 import rclpy
 from rclpy.node import Node
-from std_srvs.srv import SetBool
 from std_msgs.msg import Float64
 
 class SpeedPublisher(Node):

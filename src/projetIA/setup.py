@@ -28,6 +28,8 @@ setup(
         'console_scripts': [
             'speed_publisher = projetIA.speed_publisher:main',
             'state_subscriber = projetIA.state_subscriber:main',
+            'world_control = projetIA.world_control:main',
+
         ],
     },
 )

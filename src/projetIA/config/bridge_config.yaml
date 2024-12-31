@@ -19,3 +19,8 @@
   gz_type_name: "gz.msgs.Double"
   lazy: true
   direction: ROS_TO_GZ
+
+# Service bridge configuration is not available in the python API.
+# - topic_name: "/world/default/control"
+#   ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
+#   gz_type_name: "gz.msgs.WorldControl"

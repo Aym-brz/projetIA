@@ -25,6 +25,20 @@ def generate_launch_description():
         bridge_name='ros_gz_bridge',
         config_file=bridge_config_path)
     
+    # Service bridge configuration is not available in the python API.
+    # The service bridge can be started with the following command:
+    if not os.fork():
+        os.system('ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld')
+        return
+
+    # Gazebo controller node
+    gazebo_controller_node = Node(
+        package='projetIA',
+        executable='world_control',
+        name='world_control',
+        output='screen'
+    )
+
     # SpeedPublisher node
     # speed_publisher_node = Node(
     #     package='projetIA',
@@ -38,5 +52,6 @@ def generate_launch_description():
         DeclareLaunchArgument('rqt', default_value='true',
                               description='Open RQt.'),
         ros_gz_bridge, 
-        # speed_publisher_node
+        # speed_publisher_node,
+        gazebo_controller_node
     ])

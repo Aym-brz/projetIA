@@ -24,6 +24,25 @@ création du fichier speed_publisher.py, mise à jour de bridge_config.yaml et p
 crétion du fichier state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
 => reste à extraire les bonnes données
 
+
+
+Fix the bridge for the world control service 
+   
+   can be started through ROS with 
+
+   ```bash
+   ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld
+   ```
+   
+   or equivalently 
+   ```bash
+   ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld@gz.msgs.WorldControl@gz.msgs.Boolean
+   ```
+   with the shape : 
+   ```bash
+   parameter_bridge <service@ROS2_srv_type[@Ign_req_type@Ign_rep_type]> 
+   ```
+
 fait par github copilot et pas encore testé : pendulum_env et train_pendulum
 
 # Double Pendulum on Rail Simulation
@@ -133,8 +152,8 @@ projectroot
 │   ├── projetIA/                   # Python library for the project
 │   │   └── speed_publisher.py      # ROS node to publish the speed of the trolley
 │   │   └── state_subscriber.py     # ROS node to read the speeds and positions
-│   ├── scripts/                    # Contains training scripts
-│   │   └── train.py                # Training policy
+│   │   └── pendulum_env.py         # Training environment
+│   │   └── train_pendulum.py       # Training script
 │   ├── README.md                   # Documentation
 │   ├── setup.py                    # Setup script for the ROS 2 package
 │   └── package.xml                 # ROS 2 package metadata
@@ -180,9 +199,14 @@ The pendulum starts in a random initial position. The reinforcement learning alg
 The reward is calculated as:
 - **Positive Terms**:
   - Maintaining angles near the upright position for both pendulum links.
+  - Maintaining position near the center for the trolley.
   - Minimizing velocities (both angular and linear).
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
 ## TODO
-- Create the policy (reward function)
-- Train the model
+- Finish the environment (pendulum_env.py)
+   - Create the reward function
+
+- Write the script for the training
+   - Implement the RL algoritm
+   - Train the model
