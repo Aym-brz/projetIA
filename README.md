@@ -171,6 +171,7 @@ projectroot
 │   │   └── state_subscriber.py     # ROS node to read the speeds and positions
 │   │   └── pendulum_env.py         # Training environment
 │   │   └── train_pendulum.py       # Training script
+│   │   └── world_control.py        # ROS node to start, pause and reset the simulation
 │   ├── README.md                   # Documentation
 │   ├── setup.py                    # Setup script for the ROS 2 package
 │   └── package.xml                 # ROS 2 package metadata
@@ -221,9 +222,7 @@ The reward is calculated as:
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
 ## TODO
-- Finish the environment (pendulum_env.py)
-   - Create the reward function
-
 - Write the script for the training
-   - Implement the RL algoritm
+   - Implement the RL algoritm (also inlcude a way to save the progression !)
+   - change the launch file to include the training
    - Train the model

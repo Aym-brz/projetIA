@@ -12,6 +12,8 @@ class StateSubscriber(Node):
     Attributes:
         joint_state_sub (Subscription): The subscription to the '/joint_states' topic.
         state (numpy.ndarray): A 1D array of size 6 that holds the state of the joints and trolley.
+            [upper joint position, upper joint velocity, lower joint position, lower joint velocity, trolley position, trolley velocity]
+            [°, °/s, °, °/s, m, m/s]
         done (bool): A flag indicating whether the processing is done.
     Methods:
         __init__(): Initializes the StateSubscriber node and sets up the subscription.
@@ -31,6 +33,13 @@ class StateSubscriber(Node):
                            msg.position[2], msg.velocity[2]]  # trolley position and velocity
        
     def get_state(self):
+        """Read the state of the joints and return it. 
+
+        Returns:
+            state (numpy.ndarray): A 1D array of size 6 that holds the state of the joints and trolley.
+                [upper joint position, upper joint velocity, lower joint position, lower joint velocity, trolley position, trolley velocity]
+                [°, °/s, °, °/s, m, m/s]
+        """
         rclpy.spin_once(self)
         return self.__state   
              
