@@ -47,9 +47,9 @@ class PendulumEnv(gym.Env, Node):
         state = self.joint_state_sub.get_state()
         
         # TODO Define the reward properly
-        # reward for upright position, close to the center and low velocity
-        ojective_state = np.array([-90, 0, 0, 0, 0, 0])
-        reward = -sum(abs(ojective_state - state))
+        # reward for upright position, close to the center
+        ojective_state = np.array([90, 0, 0, 0, 0, 0])
+        reward = -sum(abs(ojective_state[[0,2,4]] - state[[0,2,4]]))
         done = abs(state[4]) >= 2.0  # done if trolley reaches limits
         
         return state, reward, done, {}
