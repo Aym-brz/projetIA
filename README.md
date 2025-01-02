@@ -21,9 +21,12 @@ https://gazebosim.org/api/sim/8/jointcontrollers.htmls
 création du fichier speed_publisher.py, mise à jour de bridge_config.yaml et pendulum.launch.py et setup.py pour définir le fichier speed_publisher comme porte entrée. 
 => le double pendule bouge à la vitesse définie initialement dans speed_publisher
 
-crétion du fichier state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
+de la même manière, création d'un noeud pour controler la postion des deux pivots, de manière à initialiser le pendule dans une position aléatoire.
+
+crétion du noeud ros state subscriber, pour lire l'état des joints. state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
 => reste à extraire les bonnes données
 
+création du noeud
 
 
 Fix the bridge for the world control service 

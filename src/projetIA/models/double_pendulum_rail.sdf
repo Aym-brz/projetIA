@@ -89,7 +89,7 @@
       </link>
       <!-- upper link, length 1, IC -90 degrees -->
       <link name="upper_link">
-        <pose>0.2 0 4 -1.5708 0 0</pose>
+        <pose>0.2 0 4 -3.14159 0 0</pose>
         <self_collide>0</self_collide>
         <inertial>
           <pose>0 0 0.5 0 0 0</pose>
@@ -124,7 +124,7 @@
       </link>
       <!-- lower link, length 1, IC ~-120 degrees more -->
       <link name="lower_link">
-        <pose>0.4 1 4 -1.5708 0 0</pose>
+        <pose>0.4 0 3 -3.14159 0 0</pose>
         <self_collide>0</self_collide>
         <inertial>
           <pose>0 0 0.5 0 0 0</pose>
@@ -155,6 +155,14 @@
         <child>upper_link</child>
         <axis>
           <xyz>1.0 0 0</xyz>
+          <dynamics>
+            <damping>0</damping>
+            <friction>1</friction>
+          </dynamics>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
         </axis>
       </joint>
       <!-- pin joint for lower link, at origin of child link -->
@@ -163,6 +171,14 @@
         <child>lower_link</child>
         <axis>
           <xyz>1.0 0 0</xyz>
+          <dynamics>
+            <damping>0</damping>
+            <friction>1</friction>
+          </dynamics>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
         </axis>
       </joint>
 
@@ -175,6 +191,8 @@
             <lower>-2.0</lower>
             <upper>2.0</upper>
           </limit>
+        <min_effort>-1e12</min_effort>
+        <max_effort>1e12</max_effort>
         </axis>
       </joint>
 

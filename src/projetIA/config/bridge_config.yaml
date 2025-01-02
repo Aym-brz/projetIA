@@ -20,6 +20,21 @@
   lazy: true
   direction: ROS_TO_GZ
 
+# Set position service not usable, as the reference position can not be removed after being set
+# - ros_topic_name: "/upper_joint_pos_cmd"
+#   gz_topic_name: "/model/double_pendulum_rail/joint/upper_joint/cmd_vel"
+#   ros_type_name: "std_msgs/msg/Float64"
+#   gz_type_name: "gz.msgs.Double"
+#   lazy: true
+#   direction: ROS_TO_GZ
+
+# - ros_topic_name: "/lower_joint_pos_cmd"
+#   gz_topic_name: "/model/double_pendulum_rail/joint/lower_joint/cmd_vel"
+#   ros_type_name: "std_msgs/msg/Float64"
+#   gz_type_name: "gz.msgs.Double"
+#   lazy: true
+#   direction: ROS_TO_GZ
+
 # Service bridge configuration is not available in the python API.
 # - topic_name: "/world/default/control"
 #   ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
