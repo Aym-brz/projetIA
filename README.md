@@ -98,6 +98,19 @@ Desktop Install (Recommended): ROS, RViz, demos, tutorials.
 sudo apt install ros-jazzy-desktop
 ```
 
+Add ro2 to the path: open this file with a text editor
+```bash
+nano ~/.bashrc
+```
+and add this line at the end : 
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+Save and close the file, and source it:
+```bash
+source ~/.bashrc
+```
+
 ### Install Gazebo Harmonic 
 [Installation instructions](https://gazebosim.org/docs/harmonic/install_ubuntu/) 
 
@@ -117,6 +130,10 @@ The following command will install the correct version of Gazebo and ros_gz for 
 ```bash
 sudo apt-get install ros-jazzy-ros-gz
 ```
+
+sudo apt install python3-pip
+pip install rospy catkin-tools
+
 
 
 ## Installation

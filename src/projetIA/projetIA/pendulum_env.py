@@ -9,6 +9,8 @@ from sensor_msgs.msg import JointState
 from tf2_msgs.msg import TFMessage
 import math
 from world_control import GazeboControlClient
+from speed_publisher import SpeedPublisher
+from state_subscriber import StateSubscriber
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self):
@@ -17,18 +19,12 @@ class PendulumEnv(gym.Env, Node):
         self.action_space = gym.spaces.Box(low=-100, high=100, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6,))
         
-        self.publisher = self.create_publisher(Float64, '/trolley_speed_cmd', 10)
-        self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
-        
+        self.speed_publisher_node = SpeedPublisher()
+        self.joint_state_sub = StateSubscriber()
         self.state = np.zeros(6)
         self.done = False
         
         self.gazebo_control_client = GazeboControlClient()
-        
-    def joint_state_callback(self, msg):
-        self.state[:] = [msg.position[0]%np.pi*180/np.pi, msg.velocity[0]*180/np.pi,  # upper joint position [-180° to +180°] and velocity [°/s]
-                           msg.position[1]%np.pi*180/np.pi, msg.velocity[1]*180/np.pi,  # lower joint position [-180° to +180°] and velocity [°/s]
-                           msg.position[2], msg.velocity[2]]  # trolley position [-2 to 2] and velocity |-inf to inf]
         
     def step(self, action):
         """
@@ -42,18 +38,19 @@ class PendulumEnv(gym.Env, Node):
                 - done (bool): A boolean indicating whether the episode has ended.
                 - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
-        msg = Float64()
-        msg.data = float(action[0])
-        self.publisher.publish(msg)
+        # Set the speed of the trolley
+        self.speed_publisher_node.set_speed(action[0])
         
-        # Wait for new state (implement proper synchronization)
+        # Wait for new state 
         rclpy.spin_once(self)
         
-        # TODO Define the reward properly
-        reward = -abs(np.pi - self.state[0]) - abs(self.state[1])  # reward for upright position, close to the center and low velocity
-        done = abs(self.state[4]) >= 2.0  # done if trolley reaches limits
+        state = self.joint_state_sub.get_state()
         
-        return self.state, reward, done, {}
+        # TODO Define the reward properly
+        reward = -abs(np.pi - state[0]) - abs(state[1])  # reward for upright position, close to the center and low velocity
+        done = abs(state[4]) >= 2.0  # done if trolley reaches limits
+        
+        return state, reward, done, {}
         
     def reset(self):
         """

@@ -31,15 +31,15 @@ def generate_launch_description():
         os.system('ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld')
         return
 
-    # Gazebo controller node
-    gazebo_controller_node = Node(
-        package='projetIA',
-        executable='world_control',
-        name='world_control',
-        output='screen'
-    )
+    # # Gazebo controller node
+    # gazebo_controller_node = Node(
+    #     package='projetIA',
+    #     executable='world_control',
+    #     name='world_control',
+    #     output='screen'
+    # )
 
-    # SpeedPublisher node
+    # # SpeedPublisher node
     # speed_publisher_node = Node(
     #     package='projetIA',
     #     executable='speed_publisher',
@@ -53,5 +53,5 @@ def generate_launch_description():
                               description='Open RQt.'),
         ros_gz_bridge, 
         # speed_publisher_node,
-        gazebo_controller_node
+        # gazebo_controller_node
     ])

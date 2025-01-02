@@ -8,43 +8,46 @@ ros2 service call /set_speed std_srvs/srv/SetFloat "{data: 1.5}"
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
+import time
 
 class SpeedPublisher(Node):
+    """
+    A ROS2 node that publishes the speed of the trolley on the /trolley_speed_cmd topic.
+    Attributes:
+        publisher_ (Publisher): The publisher to the /trolley_speed_cmd topic.
+        speed (float): The speed of the trolley.
+    Methods:
+        __init__(): Initializes the SpeedPublisher node and sets up the publisher.
+        set_speed(speed): Sets the speed of the trolley and publishes it on the /trolley_speed_cmd topic.
+    """
     def __init__(self):
         super().__init__('speed_publisher')
         self.publisher_ = self.create_publisher(Float64, '/trolley_speed_cmd', 10)
-        self.timer = self.create_timer(0.1, self.timer_callback)
-        self.speed = 0.0  # Initial speed value
-        # self.srv = self.create_service(SetFloat, 'set_speed', self.set_speed_callback)  # Create the service
+        self.__speed = 0.0  # Initial speed value
 
-    # def set_speed_callback(self, request, response):
-    #     """
-    #     Callback function to handle speed change requests.
-
-    #     This function is called when a request is made to the set_speed service.
-    #     """
-    #     self.speed = request.data
-    #     response.success = True
-    #     response.message = f"Speed set to {self.speed}"
-    #     return response
-
-    def timer_callback(self):
+    def set_speed(self, speed):
         """
-        Publish the current speed value on the /trolley_speed_cmd topic.
+        Set the speed of the trolley and publish it on the /trolley_speed_cmd topic.
 
-        This function is called at a rate of 10 Hz by the timer.
+        Args:
+            speed (float): The speed value to set.
         """
+        self.__speed = speed
         msg = Float64()
-        msg.data = self.speed
+        msg.data = self.__speed
         self.publisher_.publish(msg)
+        
+
 
 def main(args=None):
     rclpy.init(args=args)
     speed_publisher = SpeedPublisher()
-    rclpy.spin(speed_publisher)
-    # # Destroy the node explicitly
-    # speed_publisher.destroy_node()
-    # rclpy.shutdown()
+    while True:
+        # Example speed sequence
+        speed_publisher.set_speed(1.0)
+        time.sleep(5)
+        speed_publisher.set_speed(-1.0)
+        time.sleep(5)
 
 if __name__ == '__main__':
     main()
