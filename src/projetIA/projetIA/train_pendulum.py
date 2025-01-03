@@ -38,7 +38,6 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     Retourne :
     - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
     """
-    rclpy.init()
     # Optimiseur pour entraîner la politique
     optimizer = optim.Adam(policy.parameters(), lr=lr)
     
@@ -112,6 +111,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     return total_rewards
 
 
+rclpy.init()
 # Initialisation de l'environnement
 env = PendulumEnv()
 

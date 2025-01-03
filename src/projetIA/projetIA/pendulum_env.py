@@ -26,7 +26,7 @@ class PendulumEnv(gym.Env, Node):
         
         self.gazebo_control_client = GazeboControlClient()
         
-    def step(self, action):
+    def step(self, action, num_sim_steps: int=10):
         """
         Execute one step in the environment with the given action.
         Args:
@@ -39,11 +39,11 @@ class PendulumEnv(gym.Env, Node):
                 - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
         # Set the speed of the trolley
-        self.speed_publisher_node.set_speed(action[0])
+        self.speed_publisher_node.set_speed(action)
         
+        self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         # Wait for new state 
         rclpy.spin_once(self)
-        
         state = self.joint_state_sub.get_state()
         
         # TODO Define the reward properly
@@ -58,18 +58,18 @@ class PendulumEnv(gym.Env, Node):
         
         return state, reward, done, {}
         
-    def reset(self):
+    def reset(self, pause: bool=True):
         """
         Reset the simulation to its initial state.
         Returns:
-            numpy.ndarray: The initial state of the environment.
+            bool: Returns True when the reset is successful.
         """
         # Reset the simulation
-        self.gazebo_control_client.send_control_request(pause=False, reset=True)
+        self.gazebo_control_client.send_control_request(pause=pause, reset=True)
         # Reset the state
         self.done = False
         
-        return self.state
+        return True
 
 def main():
     env = PendulumEnv()

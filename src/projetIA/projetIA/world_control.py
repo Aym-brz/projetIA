@@ -29,6 +29,21 @@ class GazeboControlClient(Node):
         #     self.get_logger().info(f'Service response: {future.result()}')
         # else:
         #     self.get_logger().error('Service call failed.')
+    
+    def make_simulation_steps(self, num_steps: int=10):
+        """Pause the simulation and execute multiple steps.
+
+        Args:
+            num_steps (int, optional): Number of steps to do. Defaults to 10.
+        """
+        request = ControlWorld.Request()
+        request.world_control.pause = True
+        request.world_control.multi_step = num_steps
+        future = self.client.call_async(request)
+        rclpy.spin_until_future_complete(self, future)
+        
+
+        
 
 def main(args=None):
     rclpy.init(args=args)
