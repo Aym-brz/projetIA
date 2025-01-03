@@ -32,12 +32,11 @@ class SpeedPublisher(Node):
         Args:
             speed (float): The speed value to set.
         """
-        self.__speed = speed
+        self.__speed = float(speed)
         msg = Float64()
         msg.data = self.__speed
         self.publisher_.publish(msg)
         
-
 def main(args=None):
     rclpy.init(args=args)
     speed_publisher = SpeedPublisher()

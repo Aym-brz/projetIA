@@ -1,9 +1,11 @@
+#./projetIA.venv/bin/python
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from pendulum_env import PendulumEnv
 import numpy as np
 import matplotlib.pyplot as plt
+import rclpy
 
 class Policy(nn.Module):
     def __init__(self):
@@ -32,6 +34,7 @@ def train(policy, env, num_episodes=1000, gamma=0.99, lr=1e-3):
     - gamma : facteur d'actualisation pour les récompenses futures.
     - lr : taux d'apprentissage pour l'optimiseur.
     """
+    rclpy.init()
     # Optimiseur pour entraîner la politique
     optimizer = optim.Adam(policy.parameters(), lr=lr)
     
