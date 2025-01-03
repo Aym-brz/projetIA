@@ -21,7 +21,7 @@ class Policy(nn.Module):
         return self.network(x) * 100  # scale to action space
 
 
-def train(policy, env, num_episodes=1000, gamma=0.99, lr=1e-3):
+def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.99, lr:float=1e-3, max_iter:int=100):
     """
     Entraîne le modèle Policy pour stabiliser un double pendule.
     
@@ -31,6 +31,10 @@ def train(policy, env, num_episodes=1000, gamma=0.99, lr=1e-3):
     - num_episodes : nombre total d'épisodes d'entraînement.
     - gamma : facteur d'actualisation pour les récompenses futures.
     - lr : taux d'apprentissage pour l'optimiseur.
+    - max_iter : nombre maximum d'iterations par episode.
+    
+    Retourne :
+    - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
     """
     # Optimiseur pour entraîner la politique
     optimizer = optim.Adam(policy.parameters(), lr=lr)
@@ -39,13 +43,15 @@ def train(policy, env, num_episodes=1000, gamma=0.99, lr=1e-3):
     total_rewards = []
 
     for episode in range(num_episodes):
+        print(episode)
         # Réinitialisation de l'environnement
         state = env.reset()  # État initial (vecteur de taille 6)
         episode_rewards = []
         episode_log_probs = []
         
         done = False
-        while not done:
+        iter = 0
+        while not done and iter < max_iter:
             # Convertir l'état en tenseur PyTorch
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
             
@@ -65,6 +71,7 @@ def train(policy, env, num_episodes=1000, gamma=0.99, lr=1e-3):
             episode_log_probs.append(log_prob)
             
             # Passer à l'état suivant
+            iter += 1
             state = next_state
         
         # Calcul de la récompense totale pour l'épisode
@@ -118,9 +125,10 @@ policy = Policy()
 num_episodes = 1000
 gamma = 0.99
 learning_rate = 1e-3
+max_iter = 200
 
 # Entraînement de la politique
-total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate)
+total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate, max_iter=max_iter)
 
 # Affichage des résultats
 plt.plot(total_rewards)
