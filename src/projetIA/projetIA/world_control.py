@@ -19,16 +19,16 @@ class GazeboControlClient(Node):
         request.world_control.pause = pause
         request.world_control.reset.all = reset
 
-        self.get_logger().info(
-            f'Sending control request: pause={pause}, reset={reset}'
-        )
+        # self.get_logger().info(
+        #     f'Sending control request: pause={pause}, reset={reset}'
+        # )
         future = self.client.call_async(request)
         rclpy.spin_until_future_complete(self, future)
         
-        if future.result() is not None:
-            self.get_logger().info(f'Service response: {future.result()}')
-        else:
-            self.get_logger().error('Service call failed.')
+        # if future.result() is not None:
+        #     self.get_logger().info(f'Service response: {future.result()}')
+        # else:
+        #     self.get_logger().error('Service call failed.')
 
 def main(args=None):
     rclpy.init(args=args)
@@ -38,7 +38,7 @@ def main(args=None):
         node.send_control_request(pause=False, reset=False)
         time.sleep(5)
         node.send_control_request(pause=True, reset=False)
-        time.sleep(5)
+        time.sleep(1)
         node.send_control_request(pause=True, reset=True)
 
 

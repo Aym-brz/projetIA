@@ -31,27 +31,20 @@ def generate_launch_description():
         os.system('ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld')
         return
 
-    # Gazebo controller node
-    gazebo_controller_node = Node(
+    # Gazebo training node
+    # TODO : write the training as a ros node.
+    training_node = Node(
         package='projetIA',
-        executable='world_control',
-        name='world_control',
+        executable='train_pendulum',
+        name='train_pendulum',
         output='screen'
     )
 
-    # SpeedPublisher node
-    speed_publisher_node = Node(
-        package='projetIA',
-        executable='speed_publisher',
-        name='speed_publisher',
-        output='screen'
-    )
 
     return LaunchDescription([
         gazebo_server,
         DeclareLaunchArgument('rqt', default_value='true',
                               description='Open RQt.'),
         ros_gz_bridge, 
-        speed_publisher_node,
-        gazebo_controller_node
+        training_node
     ])

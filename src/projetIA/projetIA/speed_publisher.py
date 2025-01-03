@@ -43,10 +43,10 @@ def main(args=None):
     speed_publisher = SpeedPublisher()
     while True:
         # Example speed sequence
-        speed_publisher.set_speed(1.0)
-        time.sleep(5)
-        speed_publisher.set_speed(-1.0)
-        time.sleep(5)
+        speed_publisher.set_speed(10.0)
+        time.sleep(1)
+        speed_publisher.set_speed(-10.0)
+        time.sleep(1)
 
 if __name__ == '__main__':
     main()
