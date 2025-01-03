@@ -63,7 +63,6 @@ class PendulumEnv(gym.Env, Node):
         # Reset the simulation
         self.gazebo_control_client.send_control_request(pause=False, reset=True)
         # Reset the state
-        self.state = np.zeros(6)
         self.done = False
         
         return self.state
