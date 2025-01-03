@@ -21,7 +21,6 @@ class PendulumEnv(gym.Env, Node):
         
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber()
-        self.state = np.zeros(6)
         self.done = False
         
         self.gazebo_control_client = GazeboControlClient()
@@ -43,15 +42,13 @@ class PendulumEnv(gym.Env, Node):
         
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         # Wait for new state 
-        rclpy.spin_once(self)
         state = self.joint_state_sub.get_state()
         
-        # TODO Define the reward properly
         # reward for upright position, close to the center
-        objective_state = np.array([np.pi, 0, 0, 0, 0, 0])
-        reward = -sum([ (objective_state[0] - state[0])%(2*np.pi)*180/np.pi, # upper joint up
-                        state[2]%(2*np.pi)*180/np.pi,                        # lower joint straight
-                        abs(state[4])                                        # center of the rail
+        objective_state = np.array([180, 0, 0, 0, 0, 0])
+        reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
+                        min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
+                        (state[4]*360/10)**2                 # center of the rail
                     ])
         
         done = abs(state[4]) >= 5.0  # done if trolley reaches limits
@@ -62,14 +59,14 @@ class PendulumEnv(gym.Env, Node):
         """
         Reset the simulation to its initial state.
         Returns:
-            bool: Returns True when the reset is successful.
+            numpy.ndarray: The initial state of the environment after the reset.
         """
         # Reset the simulation
         self.gazebo_control_client.send_control_request(pause=pause, reset=True)
         # Reset the state
         self.done = False
-        
-        return True
+        state = self.joint_state_sub.get_state()
+        return state
 
 def main():
     env = PendulumEnv()
