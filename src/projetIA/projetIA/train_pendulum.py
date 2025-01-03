@@ -3,12 +3,18 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from pendulum_env import PendulumEnv
+from pendulum_env import *
 import numpy as np
 import matplotlib.pyplot as plt
 import rclpy
 
 class Policy(nn.Module):
     def __init__(self):
+        """
+        Initializes the policy network. This network takes the state of the pendulum as input and outputs the action to be taken. The output is scaled to the action space by multiplying with 100.
+
+        The network is composed of two hidden layers of size 64 with ReLU activation, and an output layer of size 1 with Tanh activation.
+        """
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(6, 64),
@@ -20,10 +26,10 @@ class Policy(nn.Module):
         )
         
     def forward(self, x):
-        return self.network(x) * 100  # scale to action space
+        return self.network(x) * max_speed  # scale to action space
 
 
-def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.99, lr:float=1e-3, max_iter:int=100):
+def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.99, lr:float=1e-3, max_iter:int=1000, save_path:str="trained_policy.pth"):
     """
     Entraîne le modèle Policy pour stabiliser un double pendule.
     
@@ -34,6 +40,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     - gamma : facteur d'actualisation pour les récompenses futures.
     - lr : taux d'apprentissage pour l'optimiseur.
     - max_iter : nombre maximum d'iterations par episode.
+    - save_path : chemin vers le fichier de sauvegarde de la politique.
     
     Retourne :
     - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
@@ -46,7 +53,6 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     total_rewards = []
 
     for episode in range(num_episodes):
-        print(episode)
         # Réinitialisation de l'environnement
         state = env.reset()  # État initial (vecteur de taille 6)
         episode_rewards = []
@@ -76,6 +82,10 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             # Passer à l'état suivant
             iter += 1
             state = next_state
+            if done:
+                print(f"Episode {episode + 1} done after {iter} iterations")
+            elif iter == max_iter:
+                print(f"Episode {episode + 1} done after max iterations")
         
         # Calcul de la récompense totale pour l'épisode
         total_episode_reward = sum(episode_rewards)
@@ -107,7 +117,12 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         
         # Afficher le résultat périodiquement
         if (episode + 1) % 100 == 0:
+            torch.save(policy.state_dict(), save_path)
             print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
+    
+    # Sauvegarde finale du modèle
+    torch.save(policy.state_dict(), save_path)
+    print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")
     
     return total_rewards
 
@@ -128,10 +143,12 @@ policy = Policy()
 num_episodes = 1000
 gamma = 0.99
 learning_rate = 1e-3
-max_iter = 200
+max_iter = 1000
+save_path="trained_policy.pth"
+
 
 # Entraînement de la politique
-total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate, max_iter=max_iter)
+total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate, max_iter=max_iter, save_path=save_path)
 
 # Affichage des résultats
 plt.plot(total_rewards)
@@ -140,3 +157,16 @@ plt.xlabel("Épisode")
 plt.ylabel("Récompense totale")
 plt.grid()
 plt.show()
+
+
+
+# # Charger le modèle sauvegardé
+# policy = Policy()  # Créer une nouvelle instance de Policy
+# policy.load_state_dict(torch.load("trained_policy.pth"))  # Charger les poids
+# policy.eval()  # Passer en mode évaluation (désactive dropout, batchnorm, etc.)
+
+# # Exemple d'utilisation
+# state = env.reset()  # Réinitialiser l'environnement
+# state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+# action = policy(state_tensor)  # Prédire l'action pour l'état actuel
+# print(f"Action prédite : {action.item()}")

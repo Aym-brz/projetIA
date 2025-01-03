@@ -12,11 +12,13 @@ from world_control import GazeboControlClient
 from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 
+max_speed = 150
+
 class PendulumEnv(gym.Env, Node):
     def __init__(self):
         super().__init__('pendulum_env')
         # 
-        self.action_space = gym.spaces.Box(low=-100, high=100, shape=(1,))
+        self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6,))
         
         self.speed_publisher_node = SpeedPublisher()
