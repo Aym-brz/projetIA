@@ -134,8 +134,15 @@ The following command will install the correct version of Gazebo and ros_gz for 
 sudo apt-get install ros-jazzy-ros-gz
 ```
 
-sudo apt install python3-pip
-pip install rospy catkin-tools
+
+### Install the python packages
+
+Create a new virtual environment and add all the required packages to it.
+```bash
+python3 -m venv projetIA.venv
+source projetIA.venv/bin/activate
+pip install -r requirements.txt
+```
 
 
 
@@ -178,7 +185,9 @@ projectroot
 │   ├── README.md                   # Documentation
 │   ├── setup.py                    # Setup script for the ROS 2 package
 │   └── package.xml                 # ROS 2 package metadata
-└── README.md
+├── README.md
+└── requirements.txt
+
 ```
 
 ## Usage
@@ -187,6 +196,7 @@ projectroot
    ```bash
    ros2 launch projetIA pendulum.launch.py
    ```
+   This will launch the simulation, as well as the speed control and the world control nodes
 2. From another terminal, the speed and position of the joints can be retreived :
    - Thanks to a Node subscribed to the right topics
    ```bash
@@ -213,15 +223,13 @@ projectroot
 
 
 ## Training Methodology
-The pendulum starts in a random initial position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations and controlling velocities.
-
+The pendulum starts on the stable low position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations.
 ## Reward Function
 
 The reward is calculated as:
 - **Positive Terms**:
   - Maintaining angles near the upright position for both pendulum links.
   - Maintaining position near the center for the trolley.
-  - Minimizing velocities (both angular and linear).
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
 ## TODO
