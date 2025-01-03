@@ -52,13 +52,13 @@
       <link name="rail">
         <pose>0 0 4 0 0 0</pose>
         <inertial>
-          <mass>1000</mass>
+          <mass>10000</mass>
         </inertial>
         <visual name="vis_rail">
           <pose>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.1 4 0.1</size>
+              <size>0.1 10 0.1</size>
             </box>
           </geometry>
         </visual>
@@ -157,7 +157,7 @@
           <xyz>1.0 0 0</xyz>
           <dynamics>
             <damping>0</damping>
-            <friction>1</friction>
+            <friction>2</friction>
           </dynamics>
           <limit>
             <lower>-1e+16</lower>
@@ -173,7 +173,7 @@
           <xyz>1.0 0 0</xyz>
           <dynamics>
             <damping>0</damping>
-            <friction>1</friction>
+            <friction>2</friction>
           </dynamics>
           <limit>
             <lower>-1e+16</lower>
@@ -188,8 +188,8 @@
         <axis>
           <xyz>0 1.0 0</xyz>
           <limit>
-            <lower>-2.0</lower>
-            <upper>2.0</upper>
+            <lower>-5.0</lower>
+            <upper>5.0</upper>
           </limit>
         <min_effort>-1e12</min_effort>
         <max_effort>1e12</max_effort>
@@ -214,8 +214,8 @@
         name="ignition::gazebo::systems::JointController">
         <joint_name>rail_trolley_joint</joint_name>
         <initial_velocity>0.0</initial_velocity>
-        <min_position>-2.0</min_position>
-        <max_position>2.0</max_position>
+        <min_position>-5.0</min_position>
+        <max_position>5.0</max_position>
         <min_effort>-1e12</min_effort>
         <max_effort>1e12</max_effort>
       </plugin>

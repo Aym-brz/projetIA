@@ -48,9 +48,13 @@ class PendulumEnv(gym.Env, Node):
         
         # TODO Define the reward properly
         # reward for upright position, close to the center
-        ojective_state = np.array([90, 0, 0, 0, 0, 0])
-        reward = -sum(abs(ojective_state[[0,2,4]] - state[[0,2,4]]))
-        done = abs(state[4]) >= 2.0  # done if trolley reaches limits
+        objective_state = np.array([np.pi, 0, 0, 0, 0, 0])
+        reward = -sum([ (objective_state[0] - state[0])%(2*np.pi)*180/np.pi, # upper joint up
+                        state[2]%(2*np.pi)*180/np.pi,                        # lower joint straight
+                        abs(state[4])                                        # center of the rail
+                    ])
+        
+        done = abs(state[4]) >= 5.0  # done if trolley reaches limits
         
         return state, reward, done, {}
         
