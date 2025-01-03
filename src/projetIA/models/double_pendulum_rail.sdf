@@ -190,9 +190,8 @@
           <limit>
             <lower>-5.0</lower>
             <upper>5.0</upper>
+            <effort>1e12</effort>
           </limit>
-        <min_effort>-1e12</min_effort>
-        <max_effort>1e12</max_effort>
         </axis>
       </joint>
 
@@ -205,7 +204,6 @@
         filename="ignition-gazebo-pose-publisher-system"
         name="ignition::gazebo::systems::PosePublisher">
         <publish_link_pose>true</publish_link_pose>
-
         <use_pose_vector_msg>true</use_pose_vector_msg>
       </plugin>
 
@@ -216,8 +214,6 @@
         <initial_velocity>0.0</initial_velocity>
         <min_position>-5.0</min_position>
         <max_position>5.0</max_position>
-        <min_effort>-1e12</min_effort>
-        <max_effort>1e12</max_effort>
       </plugin>
     </model>
   </world>
