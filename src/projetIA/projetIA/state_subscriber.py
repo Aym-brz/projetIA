@@ -29,7 +29,6 @@ class StateSubscriber(Node):
         self.state[:] = [msg.position[0]%(2*np.pi)*180/np.pi, msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
                            msg.position[1]%(2*np.pi)*180/np.pi, msg.velocity[1]*180/np.pi,  # lower joint position and velocity [° and °/s]
                            msg.position[2], msg.velocity[2]]  # trolley position and velocity
-        print(self.state)
        
     def get_state(self):
         """Read the state of the joints and return it. 

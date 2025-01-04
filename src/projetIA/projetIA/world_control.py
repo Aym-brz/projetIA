@@ -17,19 +17,9 @@ class GazeboControlClient(Node):
     def send_control_request(self, pause: bool=True, reset: bool=True):
         request = ControlWorld.Request()
         request.world_control.pause = pause
-        request.world_control.reset.all = reset
-
-        # self.get_logger().info(
-        #     f'Sending control request: pause={pause}, reset={reset}'
-        # )
-        future = self.client.call_async(request)
-        rclpy.spin_until_future_complete(self, future)
+        request.world_control.reset.time_only = reset
+        self.client.call(request, 0)
         
-        # if future.result() is not None:
-        #     self.get_logger().info(f'Service response: {future.result()}')
-        # else:
-        #     self.get_logger().error('Service call failed.')
-    
     def make_simulation_steps(self, num_steps: int=10):
         """Pause the simulation and execute multiple steps.
 
@@ -39,8 +29,7 @@ class GazeboControlClient(Node):
         request = ControlWorld.Request()
         request.world_control.pause = True
         request.world_control.multi_step = num_steps
-        future = self.client.call_async(request)
-        rclpy.spin_until_future_complete(self, future)
+        self.client.call(request, 0)
         
 
         
@@ -48,13 +37,12 @@ class GazeboControlClient(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = GazeboControlClient()
-    while True:
-        # Example sequence: Start, Pause, Reset
-        node.send_control_request(pause=False, reset=False)
-        time.sleep(5)
-        node.send_control_request(pause=True, reset=False)
-        time.sleep(1)
-        node.send_control_request(pause=True, reset=True)
+    # Example sequence: Start, Pause, Reset
+    node.send_control_request(pause=False, reset=False)
+    time.sleep(5)
+    node.send_control_request(pause=True, reset=False)
+    time.sleep(1)
+    node.send_control_request(pause=True, reset=True)
 
 
 if __name__ == '__main__':

@@ -44,7 +44,6 @@ class PendulumEnv(gym.Env, Node):
         # Wait for new state 
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         state = self.joint_state_sub.get_state()
-        
         # reward for upright position, close to the center
         objective_state = np.array([180, 0, 0, 0, 0, 0])
         
@@ -58,14 +57,14 @@ class PendulumEnv(gym.Env, Node):
             reward -= 10000000
         return state, reward, self.done, {}
         
-    def reset(self, pause: bool=True):
+    def reset(self):
         """
         Reset the simulation to its initial state.
         Returns:
             numpy.ndarray: The initial state of the environment after the reset.
         """
         # Reset the simulation
-        self.gazebo_control_client.send_control_request(pause=pause, reset=True)
+        self.gazebo_control_client.send_control_request(pause=False, reset=True)
         # Reset the state
         self.done = False
         state = self.joint_state_sub.get_state()
@@ -74,13 +73,11 @@ class PendulumEnv(gym.Env, Node):
 def main():
     rclpy.init()
     env = PendulumEnv()
-    while True:
-        env.gazebo_control_client.send_control_request(pause=True, reset=False)
-        env.step(-5, 1000)
+    env.gazebo_control_client.send_control_request(pause=False, reset=True)
+    for i in range(3):
+        env.step(-5, 100)
         print(env.joint_state_sub.get_state())
         time.sleep(1)
-        print(env.joint_state_sub.get_state())
-
 
 
 if __name__=="__main__":
