@@ -14,7 +14,7 @@ class GazeboControlClient(Node):
 
         self.get_logger().info('Gazebo control service is available.')
 
-    def send_control_request(self, pause: bool, reset: bool):
+    def send_control_request(self, pause: bool=True, reset: bool=True):
         request = ControlWorld.Request()
         request.world_control.pause = pause
         request.world_control.reset.all = reset

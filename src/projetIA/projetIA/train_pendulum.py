@@ -1,9 +1,8 @@
-#./projetIA.venv/bin/python
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from pendulum_env import PendulumEnv
-from pendulum_env import *
+from pendulum_env import max_speed
 import numpy as np
 import matplotlib.pyplot as plt
 import rclpy
@@ -17,11 +16,11 @@ class Policy(nn.Module):
         """
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(6, 64),
+            nn.Linear(6, 16),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(16,16),
             nn.ReLU(),
-            nn.Linear(64, 1),
+            nn.Linear(16, 1),
             nn.Tanh()  # output between -1 and 1, scaled by action space
         )
         
@@ -72,7 +71,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
             # Appliquer l'action à l'environnement
-            next_state, reward, done, _ = env.step(sampled_action.item())
+            next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=10)
             
             # Enregistrer la récompense et la log-probabilité
             episode_rewards.append(reward)
@@ -160,13 +159,13 @@ plt.show()
 
 
 
-# # Charger le modèle sauvegardé
-# policy = Policy()  # Créer une nouvelle instance de Policy
-# policy.load_state_dict(torch.load("trained_policy.pth"))  # Charger les poids
-# policy.eval()  # Passer en mode évaluation (désactive dropout, batchnorm, etc.)
+# Charger le modèle sauvegardé
+policy = Policy()  # Créer une nouvelle instance de Policy
+policy.load_state_dict(torch.load(save_path))  # Charger les poids
+policy.eval()  # Passer en mode évaluation (désactive dropout, batchnorm, etc.)
 
-# # Exemple d'utilisation
-# state = env.reset()  # Réinitialiser l'environnement
-# state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-# action = policy(state_tensor)  # Prédire l'action pour l'état actuel
-# print(f"Action prédite : {action.item()}")
+# Exemple d'utilisation
+state = env.reset()  # Réinitialiser l'environnement
+state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+action = policy(state_tensor)  # Prédire l'action pour l'état actuel
+print(f"Action prédite : {action.item()}")

@@ -26,7 +26,6 @@ class StateSubscriber(Node):
         super().__init__('state_subscriber')
         self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
         self.__state = np.zeros(6)
-        self.print_state = False
         
     def joint_state_callback(self, msg):
         self.__state[:] = [msg.position[0]%(2*np.pi)*180/np.pi, msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
@@ -42,19 +41,11 @@ class StateSubscriber(Node):
                 [°, °/s, °, °/s, m, m/s]
         """
         rclpy.spin_once(self)
-        if self.print_state:
-            print(self)
         return self.__state   
-             
-    def __print__(self):
-        print(self.__state)
-        
-
 
 def main():
     rclpy.init()
     state_subscriber = StateSubscriber()
-    state_subscriber.print_state = True
     while True:
         # Print the state every second
         time.sleep(1)

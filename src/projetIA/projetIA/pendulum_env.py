@@ -11,8 +11,9 @@ import math
 from world_control import GazeboControlClient
 from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
+import time
 
-max_speed = 150
+max_speed = 20.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self):
@@ -41,21 +42,23 @@ class PendulumEnv(gym.Env, Node):
         """
         # Set the speed of the trolley
         self.speed_publisher_node.set_speed(action)
-        
-        self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         # Wait for new state 
+        self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         state = self.joint_state_sub.get_state()
+        print(state)
         
         # reward for upright position, close to the center
         objective_state = np.array([180, 0, 0, 0, 0, 0])
+        
         reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
                         min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
                         (state[4]*360/10)**2                 # center of the rail
                     ])
         
-        done = abs(state[4]) >= 5.0  # done if trolley reaches limits
-        
-        return state, reward, done, {}
+        self.done = abs(state[4]) >= 4.89  # done if trolley reaches limits
+        if self.done:
+            reward -= 10000000
+        return state, reward, self.done, {}
         
     def reset(self, pause: bool=True):
         """
