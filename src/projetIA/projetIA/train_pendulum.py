@@ -101,15 +101,18 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         
         # Normalisation des retours pour stabilité numérique
         returns = torch.tensor(returns, dtype=torch.float32)
-        returns = (returns - returns.mean()) / (returns.std() + 1e-9)
+        #returns = (returns - returns.mean()) / (returns.std() + 1e-9)
+        returns = (returns - returns.mean()) / (returns.max() - returns.min() + 1e-9)
         
         # Calcul de la perte
         policy_loss = []
-        for log_prob, Gt in zip(episode_log_probs, returns):
-            policy_loss.append(-log_prob * Gt)  # Perte pour chaque étape
+        for log_prob, cumulated_return in zip(episode_log_probs, returns):
+            policy_loss.append(-log_prob * cumulated_return)  # Perte pour chaque étape
+        #print(policy_loss)
         
         # Moyenne sur toutes les étapes
         policy_loss = torch.cat(policy_loss).sum()
+        print(policy_loss)
         
         # Optimisation
         optimizer.zero_grad()
@@ -127,48 +130,88 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     
     return total_rewards
 
+def evaluate_policy(policy: Policy, env: PendulumEnv, num_episodes: int = 10, max_iter: int = 2000):
+    """
+    Évalue la politique entraînée sur l'environnement du pendule.
 
-rclpy.init()
-# Initialisation de l'environnement
-env = PendulumEnv()
+    Arguments :
+    - policy : une instance de la classe Policy (le réseau de neurones).
+    - env : une instance de l'environnement (comme PendulumEnv).
+    - num_episodes : nombre total d'épisodes d'évaluation.
+    - max_iter : nombre maximum d'itérations par épisode.
 
-# Vérification des dimensions d'état et d'action
-state_dim = env.observation_space.shape[0]  # Par exemple, 6 pour le double pendule
-action_dim = env.action_space.shape[0]      # Par exemple, 1 pour une force sur le chariot
+    Retourne :
+    - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
+    """
+    policy.eval()  # Passer en mode évaluation
+    total_rewards = []
 
-print(f"Dimensions de l'état : {state_dim}, Dimensions de l'action : {action_dim}")
+    for episode in range(num_episodes):
+        state = env.reset()
+        episode_rewards = []
+        done = False
+        iter = 0
 
-# Initialisation de la politique
-policy = Policy()
+        while not done and iter < max_iter:
+            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+            with torch.no_grad():
+                action = policy(state_tensor)
+            next_state, reward, done, _ = env.step(action.item(), num_sim_steps=1)
+            episode_rewards.append(reward)
+            state = next_state
+            iter += 1
 
-# Hyperparamètres
-num_episodes = 500
-gamma = 0.99
-learning_rate = 1e-3
-max_iter = 2000
-save_path="trained_policy_1.pth"
+        total_episode_reward = sum(episode_rewards)
+        total_rewards.append(total_episode_reward)
+        print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
 
+    return total_rewards
 
-# Entraînement de la politique
-total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate, max_iter=max_iter, save_path=save_path)
+def main():
+    rclpy.init()
+    # Initialisation de l'environnement
+    double_pendulum = False
+    env = PendulumEnv(double_pendulum=double_pendulum)
 
-# Affichage des résultats
-plt.plot(total_rewards)
-plt.title("Évolution des récompenses totales")
-plt.xlabel("Épisode")
-plt.ylabel("Récompense totale")
-plt.grid()
-plt.show()
+    # Vérification des dimensions d'état et d'action
+    state_dim = env.observation_space.shape[0]  # 6 pour le double pendule, 4 pour le simple
+    action_dim = env.action_space.shape[0]      # 1 pour la vitesse du chariot
 
+    print(f"Dimensions de l'état : {state_dim}, Dimensions de l'action : {action_dim}")
 
+    # Initialisation de la politique
+    policy = Policy()
 
-# Charger le modèle sauvegardé
-policy = Policy()  # Créer une nouvelle instance de Policy
-policy.load_state_dict(torch.load(save_path))  # Charger les poids
-policy.eval()  # Passer en mode évaluation (désactive dropout, batchnorm, etc.)
+    # Hyperparamètres
+    num_episodes = 500
+    gamma = 0.95
+    learning_rate = 1e-3
+    max_iter = 2000
+    save_path="trained_single_pendulum_policy_1.pth"
 
-# Exemple d'utilisation
-state = env.reset()  # Réinitialiser l'environnement
-state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-action = policy(state_tensor)  # Prédire l'action pour l'état actuel
-print(f"Action prédite : {action.item()}")
+    # Entraînement de la politique
+    total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate, max_iter=max_iter, save_path=save_path)
+
+    # Affichage des résultats
+    plt.plot(total_rewards)
+    plt.title("Évolution des récompenses totales")
+    plt.xlabel("Épisode")
+    plt.ylabel("Récompense totale")
+    plt.grid()
+    plt.show()
+
+    # Charger le modèle sauvegardé
+    policy = Policy()  # Créer une nouvelle instance de Policy
+    policy.load_state_dict(torch.load(save_path))  # Charger les poids
+    policy.eval()  # Passer en mode évaluation (désactive dropout, batchnorm, etc.)
+
+    # Évaluation de la politique entraînée
+    evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter)
+
+    # Affichage des résultats d'évaluation
+    plt.plot(evaluation_rewards)
+    plt.title("Évolution des récompenses totales en évaluation")
+    plt.xlabel("Épisode")
+    plt.ylabel("Récompense totale")
+    plt.grid()
+    plt.show()

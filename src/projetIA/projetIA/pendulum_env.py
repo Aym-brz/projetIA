@@ -16,16 +16,32 @@ import time
 max_speed = 20.0
 
 class PendulumEnv(gym.Env, Node):
-    def __init__(self):
+    def __init__(self, double_pendulum: bool = True):
         super().__init__('pendulum_env')
         # 
+        self.double_pendulum = double_pendulum
         self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6,))
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6 if double_pendulum else 4,))
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
-        self.joint_state_sub = StateSubscriber()     
-        
+        self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum)     
         self.done = False
+    
+    def compute_reward(self, state):
+        if self.double_pendulum:        
+            reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
+                            #(abs(state[1])%360),
+                            min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
+                            #(abs(state[3])%360),
+                            (state[4]*360/10)**2,                 # center of the rail
+                        ])
+        else:
+            reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
+                            #(abs(state[1])%360),
+                            (state[2]*360/10)**2,       # center of the rail
+                        ])
+        
+        return reward
         
     def step(self, action, num_sim_steps: int=1):
         """
@@ -46,15 +62,9 @@ class PendulumEnv(gym.Env, Node):
         state = self.joint_state_sub.get_state()
         # reward for upright position, close to the center
         objective_state = np.array([180, 0, 0, 0, 0, 0])
-        
-        reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
-                        (abs(state[1])%360/10)**2,
-                        min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
-                        (abs(state[3])%360/10)**2,
-                        (state[4]*360)**2,                 # center of the rail
-                    ])
-        
-        # self.done = abs(state[4]) >= 4.89  # done if trolley reaches limits
+        reward = self.compute_reward(state)        
+
+        # self.done = abs(state[-2]) >= 4.89  # done if trolley reaches limits
         # if self.done:
         #     reward -= 50000000
         return state, reward, self.done, {}
