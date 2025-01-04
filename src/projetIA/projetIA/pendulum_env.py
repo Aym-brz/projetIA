@@ -27,7 +27,7 @@ class PendulumEnv(gym.Env, Node):
         
         self.done = False
         
-    def step(self, action, num_sim_steps: int=10):
+    def step(self, action, num_sim_steps: int=2):
         """
         Execute one step in the environment with the given action.
         Args:
@@ -49,12 +49,12 @@ class PendulumEnv(gym.Env, Node):
         
         reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
                         min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
-                        (state[4]*360/10)**2                 # center of the rail
+                        (state[4]*360/5)**2                 # center of the rail
                     ])
         
         self.done = abs(state[4]) >= 4.89  # done if trolley reaches limits
         if self.done:
-            reward -= 10000000
+            reward -= 50000000
         return state, reward, self.done, {}
         
     def reset(self):
@@ -64,20 +64,22 @@ class PendulumEnv(gym.Env, Node):
             numpy.ndarray: The initial state of the environment after the reset.
         """
         # Reset the simulation
+        self.speed_publisher_node.set_speed(0)
         self.gazebo_control_client.send_control_request(pause=False, reset=True)
+        state = self.joint_state_sub.get_state()
         # Reset the state
         self.done = False
-        state = self.joint_state_sub.get_state()
         return state
 
 def main():
     rclpy.init()
     env = PendulumEnv()
-    env.gazebo_control_client.send_control_request(pause=False, reset=True)
     for i in range(3):
-        env.step(-5, 100)
-        print(env.joint_state_sub.get_state())
-        time.sleep(1)
+        state = env.reset()
+        time.sleep(5)
+        for i in range(10):
+            env.step(-5, 100)
+            time.sleep(1)
 
 
 if __name__=="__main__":

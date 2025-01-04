@@ -14,11 +14,11 @@ class GazeboControlClient(Node):
 
         self.get_logger().info('Gazebo control service is available.')
 
-    def send_control_request(self, pause: bool=True, reset: bool=True):
+    def send_control_request(self, pause: bool=False, reset: bool=True):
         request = ControlWorld.Request()
         request.world_control.pause = pause
-        request.world_control.reset.time_only = reset
-        self.client.call(request, 0)
+        request.world_control.reset.all = reset
+        self.client.call(request, 0.5)
         
     def make_simulation_steps(self, num_steps: int=10):
         """Pause the simulation and execute multiple steps.
