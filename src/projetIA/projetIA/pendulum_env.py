@@ -27,7 +27,7 @@ class PendulumEnv(gym.Env, Node):
         
         self.done = False
         
-    def step(self, action, num_sim_steps: int=2):
+    def step(self, action, num_sim_steps: int=1):
         """
         Execute one step in the environment with the given action.
         Args:
@@ -48,13 +48,15 @@ class PendulumEnv(gym.Env, Node):
         objective_state = np.array([180, 0, 0, 0, 0, 0])
         
         reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
+                        (abs(state[1])%360/10)**2,
                         min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
-                        (state[4]*360/5)**2                 # center of the rail
+                        (abs(state[3])%360/10)**2,
+                        (state[4]*360)**2,                 # center of the rail
                     ])
         
-        self.done = abs(state[4]) >= 4.89  # done if trolley reaches limits
-        if self.done:
-            reward -= 50000000
+        # self.done = abs(state[4]) >= 4.89  # done if trolley reaches limits
+        # if self.done:
+        #     reward -= 50000000
         return state, reward, self.done, {}
         
     def reset(self):

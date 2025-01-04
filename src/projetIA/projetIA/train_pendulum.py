@@ -16,11 +16,11 @@ class Policy(nn.Module):
         """
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(6, 16),
+            nn.Linear(6, 32),
             nn.ReLU(),
-            nn.Linear(16,16),
+            nn.Linear(32,32),
             nn.ReLU(),
-            nn.Linear(16, 1),
+            nn.Linear(32, 1),
             nn.Tanh()  # output between -1 and 1, scaled by action space
         )
         
@@ -78,7 +78,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
             # Appliquer l'action à l'environnement
-            next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=10)
+            next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=1)
             
             if torch.isnan(torch.tensor(next_state)).any():
                 print("torch state nab bext state")
@@ -92,8 +92,8 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             # Passer à l'état suivant
             iter += 1
             state = next_state
-            if done:
-                print(f"Episode {episode + 1} done after {iter} iterations")
+            # if done:
+            #     print(f"Episode {episode + 1} done after {iter} iterations")
         
         # Calcul de la récompense totale pour l'épisode
         total_episode_reward = sum(episode_rewards)
@@ -124,7 +124,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         optimizer.step()
         
         # Afficher le résultat périodiquement
-        if (episode + 1) % 100 == 0:
+        if (episode + 1) % 10 == 0:
             torch.save(policy.state_dict(), save_path)
             print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
     
@@ -149,11 +149,11 @@ print(f"Dimensions de l'état : {state_dim}, Dimensions de l'action : {action_di
 policy = Policy()
 
 # Hyperparamètres
-num_episodes = 1000
+num_episodes = 500
 gamma = 0.99
 learning_rate = 1e-3
-max_iter = 1000
-save_path="trained_policy.pth"
+max_iter = 2000
+save_path="trained_policy_1.pth"
 
 
 # Entraînement de la politique
