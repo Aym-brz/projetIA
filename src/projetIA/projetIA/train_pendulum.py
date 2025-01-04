@@ -56,9 +56,9 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         episode_rewards = []
         episode_log_probs = []
         
-        done = False
+        # done = False
         iter = 0
-        while not done and iter < max_iter:
+        while iter < max_iter:
             # Convertir l'état en tenseur PyTorch
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
             # Générer l'action à partir de la politique
@@ -80,11 +80,6 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             # Appliquer l'action à l'environnement
             next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=1)
             
-            if torch.isnan(torch.tensor(next_state)).any():
-                print("torch state nab bext state")
-            if torch.isnan(torch.tensor(reward)).any():
-                print("torch state nan reward")
-            
             # Enregistrer la récompense et la log-probabilité
             episode_rewards.append(reward)
             episode_log_probs.append(log_prob)
@@ -92,8 +87,6 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             # Passer à l'état suivant
             iter += 1
             state = next_state
-            # if done:
-            #     print(f"Episode {episode + 1} done after {iter} iterations")
         
         # Calcul de la récompense totale pour l'épisode
         total_episode_reward = sum(episode_rewards)

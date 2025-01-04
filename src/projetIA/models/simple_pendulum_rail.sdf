@@ -1,0 +1,152 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <physics name="1ms" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <joint name="fixed to ground" type="prismatic">
+      <parent>world</parent>
+      <child>double_pendulum_rail::rail</child>
+        <axis>
+          <xyz>1.0 0 0</xyz>
+          <limit>
+            <lower>0.0</lower>
+            <upper>0.0</upper>
+          </limit>
+        </axis>
+    </joint>
+
+    <model name="double_pendulum_rail">
+      <!-- rail -->
+      <link name="rail">
+        <pose>0 0 4 0 0 0</pose>
+        <visual name="vis_rail">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 10 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+      <!-- support -->
+      <link name="trolley">
+        <pose>0 0 4 0 0 0</pose>
+        <inertial>
+          <mass>100</mass>
+        </inertial>
+        <visual name="vis_trolley_on_rail">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 0.2 0.2</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+      <!-- upper link, length 1, IC -90 degrees -->
+      <link name="upper_link">
+        <pose>0.2 0 4 -3.14159 0 0</pose>
+        <self_collide>0</self_collide>
+        <inertial>
+          <pose>0 0 0.5 0 0 0</pose>
+        </inertial>
+        <visual name="vis_upper_joint">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.2</length>
+            </cylinder>
+          </geometry>
+        </visual>
+        <visual name="vis_lower_joint">
+          <pose>0 0 1.0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.2</length>
+            </cylinder>
+          </geometry>
+        </visual>
+        <visual name="vis_cylinder">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.9</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+      <!-- pin joint for upper link, at origin of upper link -->
+      <joint name="upper_joint" type="revolute">
+        <parent>trolley</parent>
+        <child>upper_link</child>
+        <axis>
+          <xyz>1.0 0 0</xyz>
+          <dynamics>
+            <damping>0</damping>
+            <friction>1</friction>
+          </dynamics>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+        </axis>
+      </joint>
+      <!-- pin joint for lower link, at origin of child link -->
+
+      <joint name="rail_trolley_joint" type="prismatic">
+        <parent>rail</parent>
+        <child>trolley</child>
+        <axis>
+          <xyz>0 1.0 0</xyz>
+          <limit>
+            <lower>-5.0</lower>
+            <upper>5.0</upper>
+            <effort>1e12</effort>
+          </limit>
+        </axis>
+      </joint>
+
+      <plugin
+        filename="ignition-gazebo-joint-state-publisher-system"
+        name="ignition::gazebo::systems::JointStatePublisher">
+      </plugin>
+
+      <plugin
+        filename="ignition-gazebo-pose-publisher-system"
+        name="ignition::gazebo::systems::PosePublisher">
+        <publish_link_pose>true</publish_link_pose>
+        <use_pose_vector_msg>true</use_pose_vector_msg>
+      </plugin>
+
+      <plugin
+        filename="ignition-gazebo-joint-controller-system"
+        name="ignition::gazebo::systems::JointController">
+        <joint_name>rail_trolley_joint</joint_name>
+        <initial_velocity>0.0</initial_velocity>
+        <min_position>-5.0</min_position>
+        <max_position>5.0</max_position>
+      </plugin>
+    </model>
+  </world>
+</sdf>
