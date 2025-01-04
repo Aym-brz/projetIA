@@ -1,9 +1,7 @@
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
-from tf2_msgs.msg import TFMessage
 import time
 
 class StateSubscriber(Node):
@@ -25,12 +23,13 @@ class StateSubscriber(Node):
     def __init__(self):
         super().__init__('state_subscriber')
         self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
-        self.__state = np.zeros(6)
+        self.state = np.zeros(6)
         
     def joint_state_callback(self, msg):
-        self.__state[:] = [msg.position[0]%(2*np.pi)*180/np.pi, msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
+        self.state[:] = [msg.position[0]%(2*np.pi)*180/np.pi, msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
                            msg.position[1]%(2*np.pi)*180/np.pi, msg.velocity[1]*180/np.pi,  # lower joint position and velocity [° and °/s]
                            msg.position[2], msg.velocity[2]]  # trolley position and velocity
+        print(self.state)
        
     def get_state(self):
         """Read the state of the joints and return it. 
@@ -41,7 +40,7 @@ class StateSubscriber(Node):
                 [°, °/s, °, °/s, m, m/s]
         """
         rclpy.spin_once(self)
-        return self.__state   
+        return self.state   
 
 def main():
     rclpy.init()

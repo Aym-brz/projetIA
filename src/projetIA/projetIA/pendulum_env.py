@@ -21,12 +21,11 @@ class PendulumEnv(gym.Env, Node):
         # 
         self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6,))
-        
-        self.speed_publisher_node = SpeedPublisher()
-        self.joint_state_sub = StateSubscriber()
-        self.done = False
-        
         self.gazebo_control_client = GazeboControlClient()
+        self.speed_publisher_node = SpeedPublisher()
+        self.joint_state_sub = StateSubscriber()     
+        
+        self.done = False
         
     def step(self, action, num_sim_steps: int=10):
         """
@@ -45,7 +44,6 @@ class PendulumEnv(gym.Env, Node):
         # Wait for new state 
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         state = self.joint_state_sub.get_state()
-        print(state)
         
         # reward for upright position, close to the center
         objective_state = np.array([180, 0, 0, 0, 0, 0])
@@ -74,7 +72,15 @@ class PendulumEnv(gym.Env, Node):
         return state
 
 def main():
+    rclpy.init()
     env = PendulumEnv()
+    while True:
+        env.gazebo_control_client.send_control_request(pause=True, reset=False)
+        env.step(-5, 1000)
+        print(env.joint_state_sub.get_state())
+        time.sleep(1)
+        print(env.joint_state_sub.get_state())
+
 
 
 if __name__=="__main__":
