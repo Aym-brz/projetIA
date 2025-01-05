@@ -8,7 +8,7 @@ from state_subscriber import StateSubscriber
 import time
 
 rclpy.init()
-max_speed = 50.0
+max_speed = 25.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True):
@@ -34,7 +34,7 @@ class PendulumEnv(gym.Env, Node):
         else:
             reward = 1/100_000*sum([  
                             180**2          -(abs(state[0]-180)%360)**2, # upper joint up
-                                            -abs(state[1]),
+                                            -abs(state[1]),              # Angular speed
                             (5*360/10)**2   -(state[2]*360/10)**2,       # center of the rail
                         ])
         
@@ -62,7 +62,7 @@ class PendulumEnv(gym.Env, Node):
         reward = self.compute_reward(state)        
 
         if abs(state[-2]) >= 5 :
-            reward -= 1000
+            reward -= 10000
             self.done = True
         return state, reward, self.done, self.done, {}
         

@@ -46,7 +46,7 @@ def train(env, hyperparameters, actor_model, critic_model):
 	# Train the PPO model with a specified total timesteps
 	# NOTE: You can change the total timesteps here, I put a big number just because
 	# you can kill the process whenever you feel like PPO is converging
-	model.learn(total_timesteps=200_000_000)
+	model.learn(total_timesteps=200_000_000_000)
 
 def test(env, actor_model):
 	"""
@@ -96,14 +96,15 @@ def main(args):
 	# ArgumentParser because it's too annoying to type them every time at command line. Instead, you can change them here.
 	# To see a list of hyperparameters, look in ppo.py at function _init_hyperparameters
 	hyperparameters = {
-				'timesteps_per_batch': 2048, 
-				'max_timesteps_per_episode': 1000, 
+				'timesteps_per_batch': 10000, 
+				'max_timesteps_per_episode': 2000, 
 				'gamma': 0.99, 
 				'n_updates_per_iteration': 10,
 				'lr': 3e-4, 
-				'clip': 0.2,
+				'clip': 0.5,
 				'render': True,
-				'render_every_i': 10
+				'render_every_i': 10,
+				'seed':123
 			  }
 
 	# Creates the environment we'll be running. If you want to replace with your own
@@ -119,4 +120,7 @@ def main(args):
 
 if __name__ == '__main__':
 	args = get_args() # Parse arguments from command line
+	# args.actor_model = 'ppo_actor.pth' # Specify actor model to load in
+	# args.critic_model = 'ppo_critic.pth' # Specify critic model to load in
 	main(args)
+

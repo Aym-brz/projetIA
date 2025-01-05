@@ -52,7 +52,7 @@ class StateSubscriber(Node):
 
 def main():
     rclpy.init()
-    state_subscriber = StateSubscriber()
+    state_subscriber = StateSubscriber(double_pendulum=False)
     while True:
         # Print the state every second
         time.sleep(1)

@@ -77,15 +77,6 @@
             </cylinder>
           </geometry>
         </visual>
-        <visual name="vis_lower_joint">
-          <pose>0 0 1.0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-        </visual>
         <visual name="vis_cylinder">
           <pose>0 0 0.5 0 0 0</pose>
           <geometry>
