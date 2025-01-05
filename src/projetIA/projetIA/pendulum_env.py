@@ -13,7 +13,7 @@ from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 import time
 
-max_speed = 20.0
+max_speed = 50.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True):
@@ -29,16 +29,20 @@ class PendulumEnv(gym.Env, Node):
     
     def compute_reward(self, state):
         if self.double_pendulum:        
-            reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
+            reward = 1/100_000*sum([
+                            # 2*180**2,                    # reward for staying alive
+                           -(abs(state[0]-180)%360)**2, # upper joint up
                             #(abs(state[1])%360),
-                            min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
+                            -min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
                             #(abs(state[3])%360),
-                            (state[4]*360/10)**2,                 # center of the rail
+                            -(state[4]*360/10)**2,                 # center of the rail
                         ])
         else:
-            reward = -sum([ (abs(state[0]-180)%360)**2, # upper joint up
+            reward = 1/100_000*sum([  
+                            # 180**2, # reward for staying alive
+                            -(abs(state[0]-180)%360)**2, # upper joint up
                             #(abs(state[1])%360),
-                            (state[2]*360/10)**2,       # center of the rail
+                            -(state[2]*360/10)**2,       # center of the rail
                         ])
         
         return reward
@@ -64,9 +68,9 @@ class PendulumEnv(gym.Env, Node):
         objective_state = np.array([180, 0, 0, 0, 0, 0])
         reward = self.compute_reward(state)        
 
-        # self.done = abs(state[-2]) >= 4.89  # done if trolley reaches limits
-        # if self.done:
-        #     reward -= 50000000
+        # self.done = abs(state[-2]) >= 5  # done if trolley reaches limits
+        if abs(state[-2]) >= 5 :
+            reward -= 100
         return state, reward, self.done, {}
         
     def reset(self):
