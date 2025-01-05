@@ -1,27 +1,22 @@
 import gym
 import numpy as np
 import rclpy
-from rclpy.service import Service
 from rclpy.node import Node
-from std_msgs.msg import Float64
-from std_srvs.srv import Empty
-from sensor_msgs.msg import JointState
-from tf2_msgs.msg import TFMessage
-import math
 from world_control import GazeboControlClient
 from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 import time
 
+rclpy.init()
 max_speed = 50.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True):
         super().__init__('pendulum_env')
-        # 
-        self.double_pendulum = double_pendulum
         self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6 if double_pendulum else 4,))
+
+        self.double_pendulum = double_pendulum
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum)     
@@ -30,24 +25,22 @@ class PendulumEnv(gym.Env, Node):
     def compute_reward(self, state):
         if self.double_pendulum:        
             reward = 1/100_000*sum([
-                            # 2*180**2,                    # reward for staying alive
-                           -(abs(state[0]-180)%360)**2, # upper joint up
+                           180**2-(abs(state[0]-180)%360)**2, # upper joint up
                             #(abs(state[1])%360),
-                            -min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
+                            180**2-min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
                             #(abs(state[3])%360),
-                            -(state[4]*360/10)**2,                 # center of the rail
+                            (5/10*360)**2-(state[4]*360/10)**2,                 # center of the rail
                         ])
         else:
             reward = 1/100_000*sum([  
-                            # 180**2, # reward for staying alive
-                            -(abs(state[0]-180)%360)**2, # upper joint up
-                            #(abs(state[1])%360),
-                            -(state[2]*360/10)**2,       # center of the rail
+                            180**2          -(abs(state[0]-180)%360)**2, # upper joint up
+                                            -abs(state[1]),
+                            (5*360/10)**2   -(state[2]*360/10)**2,       # center of the rail
                         ])
         
         return reward
         
-    def step(self, action, num_sim_steps: int=1):
+    def step(self, action):
         """
         Execute one step in the environment with the given action.
         Args:
@@ -62,16 +55,16 @@ class PendulumEnv(gym.Env, Node):
         # Set the speed of the trolley
         self.speed_publisher_node.set_speed(action)
         # Wait for new state 
-        self.gazebo_control_client.make_simulation_steps(num_sim_steps)
+        self.gazebo_control_client.make_simulation_steps()
         state = self.joint_state_sub.get_state()
         # reward for upright position, close to the center
         objective_state = np.array([180, 0, 0, 0, 0, 0])
         reward = self.compute_reward(state)        
 
-        # self.done = abs(state[-2]) >= 5  # done if trolley reaches limits
         if abs(state[-2]) >= 5 :
-            reward -= 100
-        return state, reward, self.done, {}
+            reward -= 1000
+            self.done = True
+        return state, reward, self.done, self.done, {}
         
     def reset(self):
         """
@@ -85,17 +78,18 @@ class PendulumEnv(gym.Env, Node):
         state = self.joint_state_sub.get_state()
         # Reset the state
         self.done = False
-        return state
+        return state, {}
+    
+    def render(self):
+        return None
 
 def main():
-    rclpy.init()
-    env = PendulumEnv()
+    env = PendulumEnv(double_pendulum=False)
     for i in range(3):
         state = env.reset()
         time.sleep(5)
-        for i in range(10):
-            env.step(-5, 100)
-            time.sleep(1)
+        for i in range(100):
+            env.step(-5)
 
 
 if __name__=="__main__":

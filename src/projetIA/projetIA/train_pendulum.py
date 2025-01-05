@@ -70,7 +70,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             action = policy(state_tensor)
 
             # Ajouter de la variabilité (exploration) avec une distribution normale
-            action_distribution = torch.distributions.Normal(action, torch.tensor([10.0]))  # Écart-type = 10
+            action_distribution = torch.distributions.Normal(action, torch.tensor([max_speed/2]))  # Écart-type = 10
             sampled_action = action_distribution.sample()  # Obtenir une action
             log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
@@ -171,7 +171,7 @@ def main():
     num_episodes = 500
     gamma = 0.99
     learning_rate = 1e-3
-    max_iter = 2000
+    max_iter = 4000
     num_sim_step = 1
     save_path="trained_single_pendulum_policy.pth"
     
