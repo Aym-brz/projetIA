@@ -71,6 +71,7 @@ class PendulumEnv(gym.Env, Node):
         # self.done = abs(state[-2]) >= 5  # done if trolley reaches limits
         if abs(state[-2]) >= 5 :
             reward -= 100
+            self.done = True
         return state, reward, self.done, {}
         
     def reset(self):

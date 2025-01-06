@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import rclpy
 from collections import deque
 
-plt.ion()
+#plt.ion()
 class Policy(nn.Module):
     def __init__(self, double_pendulum:bool=True):
         """
@@ -34,7 +34,7 @@ class Policy(nn.Module):
     
 
 class REINFORCEAgent:
-    def __init__(self, policy:Policy,  gamma=0.99, lr=1e-3, memory_size=10000):
+    def __init__(self, policy:Policy, best:Policy, gamma=0.99, lr=1e-3, memory_size=10000):
         """
         Initialise l'agent REINFORCE.
 
@@ -46,6 +46,7 @@ class REINFORCEAgent:
         self.gamma = gamma
         self.lr = lr
         self.memory = deque(maxlen=memory_size)
+        self.best = best
         self.policy_network = policy
         self.optimizer = optim.Adam(self.policy_network.parameters(), lr=self.lr)
 
@@ -62,7 +63,7 @@ class REINFORCEAgent:
         """
         state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
         action = self.policy_network(state_tensor)
-        action_distribution = torch.distributions.Normal(action, torch.tensor([10.0]))  # Écart-type = 10
+        action_distribution = torch.distributions.Normal(action, torch.tensor([20.0]))  # Écart-type = 10
         sampled_action = action_distribution.sample()  # Obtenir une action
         log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
@@ -80,7 +81,7 @@ class REINFORCEAgent:
         """
         self.memory.append((state, sampled_action_episode, reward_episode, log_prob_episode))
     
-    def update(self, batch_size=25):
+    def update(self, best:Policy, batch_size:int=25):
         # Sélectionner un batch aléatoire de transitions de la mémoire
         if len(self.memory) < batch_size:
             return
@@ -89,19 +90,20 @@ class REINFORCEAgent:
         policy_loss = []
 
         for idx in batch:
+            returns = []
+            discounted_sum = 0
             state, action, reward, log_prob = self.memory[idx]
-            for _,_,reward, _ in reversed(self.memory[idx]):
+            for reward in reversed(self.memory[idx][2]):
                 discounted_sum = reward + self.gamma * discounted_sum
                 returns.insert(0, discounted_sum)
             returns = torch.tensor(returns, dtype=torch.float32)
 
             policy_loss_onebatch = []
-            for (state, action, reward, log_prob), discounted_sum in zip(self.memory, returns):
+            for log_prob, discounted_sum in zip(self.memory[idx][3], returns):
                 policy_loss_onebatch.append(-log_prob * discounted_sum)
-
             policy_loss.append(torch.cat(policy_loss_onebatch).sum())
-
-        policy_loss = torch.cat(policy_loss).sum()
+        policy_loss.append(best)
+        policy_loss = sum(policy_loss)
         
         self.optimizer.zero_grad()
         policy_loss.backward()
@@ -125,7 +127,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     Retourne :
     - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
     """
-    agent = REINFORCEAgent(policy, gamma=gamma, lr=lr)
+    agent = REINFORCEAgent(policy=policy, best=policy, gamma=gamma, lr=lr)
     # Optimiseur pour entraîner la politique
     optimizer = agent.optimizer
     
@@ -168,7 +170,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         total_rewards.append(total_episode_reward)
         if total_episode_reward > best_reward:
             torch.save(policy.state_dict(), "best_"+save_path)
-            best_reward = total_episode_reward
+            agent.best = policy
 
         
         # # Calcul du retour (return) et mise à jour des gradients
@@ -191,8 +193,8 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         agent.remember(state, sampled_action, episode_rewards, episode_log_probs)
 
         if len(agent.memory) >= batch_size:
-            for i in range(len(agent.memory)//batch_size):
-                    agent.update(batch_size)
+            for i in range(int(len(agent.memory)//batch_size)):
+                    agent.update(agent.best, batch_size)
         # # Optimisation
         # optimizer.zero_grad()
         # policy_loss.backward()
@@ -256,7 +258,7 @@ def main():
     max_iter = 2000
     num_sim_step = 1
     save_path="trained_single_pendulum_policy.pth"
-    batch_size = num_episodes/20
+    batch_size = int(num_episodes/25/2)
     
     # Initialisation de l'environnement
     env = PendulumEnv(double_pendulum=double_pendulum)
@@ -304,5 +306,5 @@ def main():
     
 if __name__ == "__main__":
     main()
-    plt.ioff()
+    #plt.ioff()
     plt.show()
