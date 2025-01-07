@@ -19,13 +19,13 @@ class Policy(nn.Module):
         """
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(6 if double_pendulum else 4, 32),
+            nn.Linear(6 if double_pendulum else 4, 16),
             nn.Tanh(),
-            nn.Linear(32, 32),
+            nn.Linear(16, 16),
             nn.Tanh(),
-            nn.Linear(32, 32),
+            nn.Linear(16, 16),
             nn.Tanh(),
-            nn.Linear(32,1),
+            nn.Linear(16,1),
             nn.Tanh()
             )
 
@@ -34,16 +34,17 @@ class Policy(nn.Module):
     
 
 class REINFORCEAgent:
-    def __init__(self, policy:Policy, best:Policy, gamma=0.99, lr=1e-3, memory_size=10000):
+    def __init__(self, policy:Policy, best:Policy, discount_factor:int=0.99, lr:float=1e-3, memory_size:int=10000, stddev:int=20):
         """
         Initialise l'agent REINFORCE.
 
         Parameters:
-        - gamma (float): Facteur d'actualisation pour les récompenses futures.
+        - discount_factor (float): Facteur d'actualisation pour les récompenses futures.
         - lr (float): Taux d'apprentissage.
         - memory_size (int): Taille maximale de la mémoire.
         """
-        self.gamma = gamma
+        self.discount_factor = discount_factor
+        self.stddev = stddev
         self.lr = lr
         self.memory = deque(maxlen=memory_size)
         self.best = best
@@ -63,7 +64,7 @@ class REINFORCEAgent:
         """
         state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
         action = self.policy_network(state_tensor)
-        action_distribution = torch.distributions.Normal(action, torch.tensor([20.0]))  # Écart-type = 10
+        action_distribution = torch.distributions.Normal(action, torch.tensor(self.stddev))  # Écart-type = 10
         sampled_action = action_distribution.sample()  # Obtenir une action
         log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
@@ -86,32 +87,71 @@ class REINFORCEAgent:
         if len(self.memory) < batch_size:
             return
         
-        batch = np.random.choice(len(self.memory), size=batch_size, replace=False)
+        for i in range(batch_size):
+        #batch = np.random.choice(len(self.memory), size=batch_size, replace=False)
+            batch = self.memory[i * batch_size : (i + 1) * batch_size]
+        
+        self._update_policy(batch)
+    
+    # Process leftover data
+    if len(self.memory) % batch_size > 0:
+        batch = self.memory[num_batches * batch_size :]
+        self._update_policy(batch)
+        
+        
         policy_loss = []
 
         for idx in batch:
             returns = []
             discounted_sum = 0
-            state, action, reward, log_prob = self.memory[idx]
-            for reward in reversed(self.memory[idx][2]):
-                discounted_sum = reward + self.gamma * discounted_sum
-                returns.insert(0, discounted_sum)
+            _, _, rewards, log_probs = self.memory[idx]
+            for reward in reversed(rewards):
+                discounted_sum = reward + self.discount_factor * discounted_sum
+                returns.append(discounted_sum)
+            returns.reverse()
             returns = torch.tensor(returns, dtype=torch.float32)
+            returns = (returns - returns.mean()) / (returns.std() + 1e-9)
 
-            policy_loss_onebatch = []
-            for log_prob, discounted_sum in zip(self.memory[idx][3], returns):
-                policy_loss_onebatch.append(-log_prob * discounted_sum)
-            policy_loss.append(torch.cat(policy_loss_onebatch).sum())
-        policy_loss.append(best)
-        policy_loss = sum(policy_loss)
+            #policy_loss_onebatch = []
+            log_probs = torch.stack(log_probs)
+            policy_loss_onebatch = -torch.sum(log_probs* returns)
+            #for log_prob, discounted_sum in zip(log_probs, returns):
+            #    policy_loss_onebatch.append(-log_prob * discounted_sum)
+            policy_loss.append(policy_loss_onebatch)
+        #policy_loss.append(best)
+        policy_loss = torch.stack(policy_loss).sum()
         
+        self.policy_network.train()
         self.optimizer.zero_grad()
         policy_loss.backward()
         self.optimizer.step()
         self.memory.clear()
 
+def _update_policy(self, batch):
+    policy_loss = []
+    for log_probs, rewards in batch:
+        returns = []
+        discounted_sum = 0
+        # Compute discounted returns
+        for reward in reversed(rewards):
+            discounted_sum = reward + self.discount_factor * discounted_sum
+            returns.insert(0, discounted_sum)
+        returns = torch.tensor(returns, dtype=torch.float32)
+        returns = (returns - returns.mean()) / (returns.std() + 1e-9)
+        
+        # Compute policy loss
+        log_probs = torch.stack(log_probs)  # Assuming log_probs is a list of tensors
+        policy_loss_onebatch = -torch.sum(log_probs * returns)
+        policy_loss.append(policy_loss_onebatch)
+    
+    # Aggregate and backpropagate
+    total_policy_loss = torch.stack(policy_loss).sum()
+    self.optimizer.zero_grad()
+    total_policy_loss.backward()
+    self.optimizer.step()
 
-def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25):
+
+def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25, stddev:int=20):
     """
     Entraîne le modèle Policy pour stabiliser un double pendule.
     
@@ -119,7 +159,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     - policy : une instance de la classe Policy (le réseau de neurones).
     - env : une instance de l'environnement (comme PendulumEnv).
     - num_episodes : nombre total d'épisodes d'entraînement.
-    - gamma : facteur d'actualisation pour les récompenses futures.
+    - discount_factor : facteur d'actualisation pour les récompenses futures.
     - lr : taux d'apprentissage pour l'optimiseur.
     - max_iter : nombre maximum d'iterations par episode.
     - save_path : chemin vers le fichier de sauvegarde de la politique.
@@ -127,12 +167,8 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
     Retourne :
     - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
     """
-    agent = REINFORCEAgent(policy=policy, best=policy, gamma=gamma, lr=lr)
-    # Optimiseur pour entraîner la politique
-    optimizer = agent.optimizer
-    
-    # Liste pour suivre les récompenses totales
-    total_rewards = []
+    agent = REINFORCEAgent(policy=policy, best=policy, discount_factor=discount_factor, lr=lr, stddev=stddev)
+    total_rewards = [] 
 
     for episode in range(num_episodes):
         # Réinitialisation de l'environnement
@@ -144,15 +180,6 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
         iter = 0
         best_reward = -np.inf
         while not done and iter < max_iter:
-            # # Convertir l'état en tenseur PyTorch
-            # state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-            # # Générer l'action à partir de la politique
-            # action = policy(state_tensor)
-
-            # # Ajouter de la variabilité (exploration) avec une distribution normale
-            # action_distribution = torch.distributions.Normal(action, torch.tensor([10.0]))  # Écart-type = 10
-            # sampled_action = action_distribution.sample()  # Obtenir une action
-            # log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             sampled_action, log_prob = agent.act(state)
 
             # Appliquer l'action à l'environnement
@@ -172,33 +199,12 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, gamma:float=0.9
             torch.save(policy.state_dict(), "best_"+save_path)
             agent.best = policy
 
-        
-        # # Calcul du retour (return) et mise à jour des gradients
-        # returns = []
-        # discounted_sum = 0
-        # for r in reversed(episode_rewards):
-        #     discounted_sum = r + gamma * discounted_sum
-        #     returns.insert(0, discounted_sum)  # Insérer en début de liste
-        
-        # # Normalisation des retours pour stabilité numérique
-        # returns = torch.tensor(returns, dtype=torch.float32)
-
-        # # Calcul de la perte
-        # policy_loss = []
-        # for log_prob, cumulated_return in zip(episode_log_probs, returns):
-        #     policy_loss.append(log_prob * cumulated_return)  # Perte pour chaque étape
-        # # Moyenne sur toutes les étapes
-        # policy_loss = torch.cat(policy_loss).sum()
-        
         agent.remember(state, sampled_action, episode_rewards, episode_log_probs)
 
         if len(agent.memory) >= batch_size:
             for i in range(int(len(agent.memory)//batch_size)):
                     agent.update(agent.best, batch_size)
-        # # Optimisation
-        # optimizer.zero_grad()
-        # policy_loss.backward()
-        # optimizer.step()
+            agent.stddev = agent.stddev*0.98
         
         # Afficher le résultat périodiquement
         print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
@@ -253,10 +259,11 @@ def main():
     double_pendulum = False
     # Hyperparamètres
     num_episodes = 500
-    gamma = 0.99
+    discount_factor = 0.95
     learning_rate = 1e-3
     max_iter = 2000
     num_sim_step = 1
+    stddev = 17
     save_path="trained_single_pendulum_policy.pth"
     batch_size = int(num_episodes/25/2)
     
@@ -279,7 +286,7 @@ def main():
 
 
     # Entraînement de la politique
-    total_rewards = train(policy, env, num_episodes=num_episodes, gamma=gamma, lr=learning_rate, max_iter=max_iter, num_sim_steps=num_sim_step, save_path=save_path, batch_size=batch_size)
+    total_rewards = train(policy, env, num_episodes=num_episodes, discount_factor=discount_factor, lr=learning_rate, max_iter=max_iter, num_sim_steps=num_sim_step, save_path=save_path, batch_size=batch_size, stddev=stddev)
 
     # Affichage des résultats
     plt.plot(total_rewards)

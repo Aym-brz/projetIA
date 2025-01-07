@@ -41,6 +41,7 @@ class PendulumEnv(gym.Env, Node):
             reward = 1/100_000*sum([  
                             # 180**2, # reward for staying alive
                             -(abs(state[0]-180)%360)**2, # upper joint up
+                            #+ 100 if abs(state[0]-180)%360 < 3 else 0,
                             #(abs(state[1])%360),
                             -(state[2]*360/10)**2,       # center of the rail
                         ])
@@ -70,7 +71,7 @@ class PendulumEnv(gym.Env, Node):
 
         # self.done = abs(state[-2]) >= 5  # done if trolley reaches limits
         if abs(state[-2]) >= 5 :
-            reward -= 100
+            reward -= 150
             self.done = True
         return state, reward, self.done, {}
         
