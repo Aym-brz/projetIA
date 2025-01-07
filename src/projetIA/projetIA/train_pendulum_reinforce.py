@@ -118,7 +118,7 @@ class REINFORCEAgent:
 
         # Convertir les données en tenseurs PyTorch
         states_tensor = torch.tensor(states, dtype=torch.float32)
-        actions_tensor = torch.tensor(actions, dtype=torch.int64)
+        actions_tensor = torch.tensor(actions, dtype=torch.float32)
         returns_tensor = torch.tensor(returns, dtype=torch.float32)
 
         # Calculer les probabilités d'actions prédictes par le modèle
