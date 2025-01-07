@@ -236,12 +236,12 @@ def main():
     rclpy.init()
     double_pendulum = False
     # Hyperparamètres
-    num_episodes = 500
+    num_episodes = 350
     discount_factor = 0.95
     learning_rate = 1e-3
-    max_iter = 2000
+    max_iter = 3000
     num_sim_step = 1
-    stddev = 20
+    stddev = 10
     save_path="trained_single_pendulum_policy.pth"
     batch_size = int(num_episodes/25)
     

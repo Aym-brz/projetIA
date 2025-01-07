@@ -126,10 +126,9 @@ class REINFORCEAgent:
         action_log_probs = torch.log(action_probs)
 
         # Extraire les log-probabilités des actions prises
-        selected_log_probs = action_log_probs[range(batch_size), actions_tensor]
 
         # Calcul de la perte : -log(pi(a|s)) * G
-        loss = -torch.mean(selected_log_probs * returns_tensor)
+        loss = -torch.mean(action_log_probs * returns_tensor)
 
         # Mise à jour des poids du réseau
         self.optimizer.zero_grad()
@@ -223,18 +222,19 @@ def evaluate_policy(policy: Policy, env: PendulumEnv, num_episodes: int = 10, ma
 def main():
     rclpy.init()
     double_pendulum = False
+    starting_up = True
     # Hyperparamètres
-    num_episodes = 500
+    num_episodes = 350
     discount_factor = 0.95
     learning_rate = 1e-3
-    max_iter = 2000
+    max_iter = 3000
     num_sim_step = 1
-    stddev = 20
+    stddev = 10
     save_path="trained_single_pendulum_policy.pth"
     batch_size = int(num_episodes/25)
     
     # Initialisation de l'environnement
-    env = PendulumEnv(double_pendulum=double_pendulum)
+    env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up)
 
     # Vérification des dimensions d'état et d'action
     state_dim = env.observation_space.shape[0]  # 6 pour le double pendule, 4 pour le simple

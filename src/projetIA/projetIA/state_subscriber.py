@@ -20,7 +20,7 @@ class StateSubscriber(Node):
         __print__(): Prints the current state.
     """
     
-    def __init__(self, double_pendulum: bool = True):
+    def __init__(self, double_pendulum: bool = True, starting_up = False):
         super().__init__('state_subscriber')
         self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
         self.double_pendulum = double_pendulum
@@ -28,6 +28,7 @@ class StateSubscriber(Node):
             self.state = np.zeros(6)
         else:
             self.state = np.zeros(4)
+        self.starting_up = starting_up
 
         
     def joint_state_callback(self, msg):
@@ -36,7 +37,7 @@ class StateSubscriber(Node):
                                 msg.position[1] % (2*np.pi) * 180/np.pi, msg.velocity[1]*180/np.pi,  # lower joint position and velocity [° and °/s]
                                 msg.position[2],                         msg.velocity[2]]            # trolley position and velocity
         else:   # single pendulum state
-            self.state[:] = [msg.position[0] % (2*np.pi) * 180/np.pi,   msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
+            self.state[:] = [(msg.position[0] + np.pi if self.starting_up else msg.position[0])% (2*np.pi) * 180/np.pi,   msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
                              msg.position[1],                           msg.velocity[1]]  # trolley position and velocity
         
     def get_state(self):
@@ -52,7 +53,7 @@ class StateSubscriber(Node):
 
 def main():
     rclpy.init()
-    state_subscriber = StateSubscriber()
+    state_subscriber = StateSubscriber(double_pendulum=False)
     while True:
         # Print the state every second
         time.sleep(1)

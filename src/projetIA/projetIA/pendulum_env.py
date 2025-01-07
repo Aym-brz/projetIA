@@ -16,7 +16,7 @@ import time
 max_speed = 50.0
 
 class PendulumEnv(gym.Env, Node):
-    def __init__(self, double_pendulum: bool = True):
+    def __init__(self, double_pendulum: bool = True, starting_up: bool = False):
         super().__init__('pendulum_env')
         # 
         self.double_pendulum = double_pendulum
@@ -24,7 +24,7 @@ class PendulumEnv(gym.Env, Node):
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6 if double_pendulum else 4,))
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
-        self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum)     
+        self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum, starting_up=starting_up)     
         self.done = False
         self.state = np.zeros(6 if double_pendulum else 4)
     
@@ -40,7 +40,7 @@ class PendulumEnv(gym.Env, Node):
                             -(state[4]*360/10)**2,                 # center of the rail
                         ])
         else:
-            instability = 1/100*np.sqrt(sum([  
+            instability = np.sqrt(sum([  
                             ((abs(state[0]-180)%360)/180)**2,     # angle deviation
                             #+ 100 if abs(state[0]-180)%360 < 3 else 0,
                             (abs(state[1])/1000)**2,            # angular velocity
@@ -48,7 +48,8 @@ class PendulumEnv(gym.Env, Node):
                         ])
             )
         stability = np.exp(-instability**2/(2*0.3**2))
-        force_punishment = (abs(state[3]-previous_state[3])/(2*max_speed))**2
+        force_punishment = 0.005* (abs(state[3]-previous_state[3])/(2*max_speed))**2
+        print(force_punishment)
 
         reward = stability - force_punishment
         return reward
