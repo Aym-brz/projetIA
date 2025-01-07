@@ -48,8 +48,7 @@ class PendulumEnv(gym.Env, Node):
                         ])
             )
         stability = np.exp(-instability**2/(2*0.3**2))
-        force_punishment = 0.005* (abs(state[3]-previous_state[3])/(2*max_speed))**2
-        print(force_punishment)
+        force_punishment = 0.01* (abs(state[3]-previous_state[3])/(2*max_speed))**2
 
         reward = stability - force_punishment
         return reward
