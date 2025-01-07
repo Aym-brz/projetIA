@@ -28,7 +28,7 @@ class PendulumEnv(gym.Env, Node):
         self.done = False
     
     def compute_reward(self, state):
-        if self.double_pendulum:        
+        if self.double_pendulum:       
             reward = 1/100_000*sum([
                             # 2*180**2,                    # reward for staying alive
                            -(abs(state[0]-180)%360)**2, # upper joint up

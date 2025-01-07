@@ -83,72 +83,50 @@ class REINFORCEAgent:
         self.memory.append((state, sampled_action_episode, reward_episode, log_prob_episode))
     
     def update(self, best:Policy, batch_size:int=25):
-        # Sélectionner un batch aléatoire de transitions de la mémoire
-        if len(self.memory) < batch_size:
-            return
-        
-        for i in range(batch_size):
-        #batch = np.random.choice(len(self.memory), size=batch_size, replace=False)
-            batch = self.memory[i * batch_size : (i + 1) * batch_size]
-        
-        self._update_policy(batch)
+        num_batches = len(self.memory) // batch_size
+        for i in range(num_batches):
+            #batch = self.memory[i * batch_size : (i + 1) * batch_size]
+            batch = [self.memory[i] for i in range(i * batch_size, (i + 1) * batch_size)]            
+            self._update_policy(batch)
     
-    # Process leftover data
-    if len(self.memory) % batch_size > 0:
-        batch = self.memory[num_batches * batch_size :]
-        self._update_policy(batch)
+        # Process leftover data
+        if len(self.memory) % batch_size > 0:
+            batch = self.memory[num_batches * batch_size :]
+            self._update_policy(batch)
+    
+        self.memory.clear()
         
         
-        policy_loss = []
+        # for idx in batch:
+        #     _, _, rewards, log_probs = self.memory[idx]
+        #     for reward in reversed(rewards):
+        #         discounted_sum = reward + self.discount_factor * discounted_sum
 
-        for idx in batch:
+        
+    def _update_policy(self, batch):
+        policy_loss = []
+        for _, _, log_probs, rewards in batch:
             returns = []
             discounted_sum = 0
-            _, _, rewards, log_probs = self.memory[idx]
+            # Compute discounted returns
             for reward in reversed(rewards):
                 discounted_sum = reward + self.discount_factor * discounted_sum
                 returns.append(discounted_sum)
             returns.reverse()
             returns = torch.tensor(returns, dtype=torch.float32)
-            returns = (returns - returns.mean()) / (returns.std() + 1e-9)
-
-            #policy_loss_onebatch = []
-            log_probs = torch.stack(log_probs)
-            policy_loss_onebatch = -torch.sum(log_probs* returns)
-            #for log_prob, discounted_sum in zip(log_probs, returns):
-            #    policy_loss_onebatch.append(-log_prob * discounted_sum)
+            #returns = (returns - returns.mean()) / (returns.std() + 1e-9)
+            
+            # Compute policy loss
+            log_probs = torch.tensor(log_probs, dtype=torch.float32, requires_grad=True)
+            policy_loss_onebatch = -torch.sum(log_probs * returns)
             policy_loss.append(policy_loss_onebatch)
-        #policy_loss.append(best)
-        policy_loss = torch.stack(policy_loss).sum()
+        total_policy_loss = torch.stack(policy_loss).sum()
         
+        # backpropagate
         self.policy_network.train()
         self.optimizer.zero_grad()
-        policy_loss.backward()
+        total_policy_loss.backward()
         self.optimizer.step()
-        self.memory.clear()
-
-def _update_policy(self, batch):
-    policy_loss = []
-    for log_probs, rewards in batch:
-        returns = []
-        discounted_sum = 0
-        # Compute discounted returns
-        for reward in reversed(rewards):
-            discounted_sum = reward + self.discount_factor * discounted_sum
-            returns.insert(0, discounted_sum)
-        returns = torch.tensor(returns, dtype=torch.float32)
-        returns = (returns - returns.mean()) / (returns.std() + 1e-9)
-        
-        # Compute policy loss
-        log_probs = torch.stack(log_probs)  # Assuming log_probs is a list of tensors
-        policy_loss_onebatch = -torch.sum(log_probs * returns)
-        policy_loss.append(policy_loss_onebatch)
-    
-    # Aggregate and backpropagate
-    total_policy_loss = torch.stack(policy_loss).sum()
-    self.optimizer.zero_grad()
-    total_policy_loss.backward()
-    self.optimizer.step()
 
 
 def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25, stddev:int=20):
@@ -263,9 +241,9 @@ def main():
     learning_rate = 1e-3
     max_iter = 2000
     num_sim_step = 1
-    stddev = 17
+    stddev = 20
     save_path="trained_single_pendulum_policy.pth"
-    batch_size = int(num_episodes/25/2)
+    batch_size = int(num_episodes/25)
     
     # Initialisation de l'environnement
     env = PendulumEnv(double_pendulum=double_pendulum)
@@ -279,7 +257,7 @@ def main():
     # Initialisation de la politique
     policy = Policy(double_pendulum=double_pendulum)
     try:
-        policy.load_state_dict(torch.load('best'+save_path))
+        policy.load_state_dict(torch.load('best_'+save_path))
     except:
         pass
 
@@ -298,7 +276,7 @@ def main():
 
     # Charger le modèle sauvegardé
     policy = Policy(double_pendulum=double_pendulum)  # Créer une nouvelle instance de Policy
-    policy.load_state_dict(torch.load(save_path))  # Charger les poids
+    policy.load_state_dict(torch.load('best_'+save_path))  # Charger les poids
 
     # Évaluation de la politique entraînée
     evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter)
