@@ -259,7 +259,7 @@ def main():
     try:
         policy.load_state_dict(torch.load('best_'+save_path))
     except:
-        pass
+        print("No previous model found, training from scratch")
 
 
 
