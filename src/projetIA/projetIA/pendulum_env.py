@@ -21,23 +21,31 @@ class PendulumEnv(gym.Env, Node):
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum)     
         self.done = False
+        self.state = np.zeros(6 if double_pendulum else 4)
     
-    def compute_reward(self, state):
-        if self.double_pendulum:        
-            reward = 1/100_000*sum([
-                           180**2-(abs(state[0]-180)%360)**2, # upper joint up
+    def compute_reward(self, previous_state):
+        state = self.state
+        if self.double_pendulum:       
+            instability = 1/100_000*sum([
+                            # 2*180**2,                    # reward for staying alive
+                           -(abs(state[0]-180)%360)**2, # upper joint up
                             #(abs(state[1])%360),
                             180**2-min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
                             #(abs(state[3])%360),
                             (5/10*360)**2-(state[4]*360/10)**2,                 # center of the rail
                         ])
         else:
-            reward = 1/100_000*sum([  
-                            180**2          -(abs(state[0]-180)%360)**2, # upper joint up
-                                            -abs(state[1]),              # Angular speed
-                            (5*360/10)**2   -(state[2]*360/10)**2,       # center of the rail
+            instability = 1/100*np.sqrt(sum([  
+                            ((abs(state[0]-180)%360)/180)**2,     # angle deviation
+                            #+ 100 if abs(state[0]-180)%360 < 3 else 0,
+                            (abs(state[1])/1000)**2,            # angular velocity
+                            (abs(state[2])/5)**2       # position on the rail
                         ])
-        
+            )
+        stability = np.exp(-instability**2/(2*0.3**2))
+        force_punishment = (abs(state[3]-previous_state[3])/(2*max_speed))**2
+
+        reward = stability - force_punishment
         return reward
         
     def step(self, action):
@@ -55,16 +63,17 @@ class PendulumEnv(gym.Env, Node):
         # Set the speed of the trolley
         self.speed_publisher_node.set_speed(action)
         # Wait for new state 
-        self.gazebo_control_client.make_simulation_steps()
-        state = self.joint_state_sub.get_state()
+        self.gazebo_control_client.make_simulation_steps(num_sim_steps)
+        previous_state = np.copy(self.state)
+        self.state = self.joint_state_sub.get_state()
         # reward for upright position, close to the center
-        objective_state = np.array([180, 0, 0, 0, 0, 0])
-        reward = self.compute_reward(state)        
+        reward = self.compute_reward(previous_state=previous_state)        
 
-        if abs(state[-2]) >= 5 :
-            reward -= 10000
+        # self.done = abs(state[-2]) >= 5  # done if trolley reaches limits
+        if abs(self.state[-2]) >= 5 :
+            # reward -= 150
             self.done = True
-        return state, reward, self.done, self.done, {}
+        return self.state, reward, self.done, {}
         
     def reset(self):
         """
