@@ -8,7 +8,7 @@ from state_subscriber import StateSubscriber
 import time
 
 rclpy.init()
-max_speed = 25.0
+max_speed = 15.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True):
@@ -35,7 +35,7 @@ class PendulumEnv(gym.Env, Node):
                             (5/10*360)**2-(state[4]*360/10)**2,                 # center of the rail
                         ])
         else:
-            instability = 1/100*np.sqrt(sum([  
+            instability = np.sqrt(sum([  
                             ((abs(state[0]-180)%360)/180)**2,     # angle deviation
                             #+ 100 if abs(state[0]-180)%360 < 3 else 0,
                             (abs(state[1])/1000)**2,            # angular velocity
@@ -63,7 +63,7 @@ class PendulumEnv(gym.Env, Node):
         # Set the speed of the trolley
         self.speed_publisher_node.set_speed(action)
         # Wait for new state 
-        self.gazebo_control_client.make_simulation_steps(num_sim_steps)
+        self.gazebo_control_client.make_simulation_steps(num_steps=1)
         previous_state = np.copy(self.state)
         self.state = self.joint_state_sub.get_state()
         # reward for upright position, close to the center
@@ -73,7 +73,7 @@ class PendulumEnv(gym.Env, Node):
         if abs(self.state[-2]) >= 5 :
             # reward -= 150
             self.done = True
-        return self.state, reward, self.done, {}
+        return self.state, reward, self.done, self.done, {}
         
     def reset(self):
         """
