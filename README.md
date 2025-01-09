@@ -169,22 +169,26 @@ pip install -r requirements.txt
 ```plaintext
 projectroot
 ├── src/
-│   ├── config/                     # Contains configuration files
+│   ├── config/                           # Contains configuration files
 │   │   └── bridge_config.yaml      
-│   ├── models/                     # Contains SDF models
-│   │   └── double_pendulum_rail.sdf  # Description of the robot (geometry, joints, aspect, environment)
-│   │   └── default_world.sdf       # Default empty environment
-│   ├── launch/                     # Contains launch files for the simulation
+│   ├── models/                           # Contains SDF models
+│   │   └── double_pendulum_rail.sdf      # Description of the robot (geometry, joints, aspect, environment)
+│   │   └── default_world.sdf             # Default empty environment
+│   ├── launch/                           # Contains launch files for the simulation
 │   │   └── pendulum.launch.py      
-│   ├── projetIA/                   # Python library for the project
-│   │   └── speed_publisher.py      # ROS node to publish the speed of the trolley
-│   │   └── state_subscriber.py     # ROS node to read the speeds and positions
-│   │   └── pendulum_env.py         # Training environment
-│   │   └── train_pendulum.py       # Training script
-│   │   └── world_control.py        # ROS node to start, pause and reset the simulation
-│   ├── README.md                   # Documentation
-│   ├── setup.py                    # Setup script for the ROS 2 package
-│   └── package.xml                 # ROS 2 package metadata
+│   ├── projetIA/                         # Python library for the project
+│   │   └── eval_policy.py                # Evaluate the best policy obtain after the training
+│   │   └── main.py                       # Launch the training and the evaluation
+│   │   └── network.py                    # Class of the network policy
+│   │   └── state_subscriber.py           # ROS node to read the speeds and positions
+│   │   └── speed_publisher.py            # ROS node to publish the speed of the trolley
+│   │   └── pendulum_env.py               # Training environment, containing the reward function
+│   │   └── train_pendulum.py             # Training script
+│   │   └── train_pendulum_reinforce.py   # Training script test (other version of the implementation but no better results)
+│   │   └── world_control.py              # ROS node to start, pause and reset the simulation
+│   ├── README.md                         # Documentation
+│   ├── setup.py                          # Setup script for the ROS 2 package
+│   └── package.xml                       # ROS 2 package metadata
 ├── README.md
 └── requirements.txt
 
@@ -226,14 +230,21 @@ projectroot
 The pendulum starts on the stable low position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations.
 ## Reward Function
 
-The reward is calculated as:
+The reward is calculated as (old version):
 - **Positive Terms**:
   - Maintaining angles near the upright position for both pendulum links.
   - Maintaining position near the center for the trolley.
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
+The reward is calculated as (new version):
+- **Stability Terms**:
+  - Instability compute as Maintaining angles near the upright position for both pendulum links and Maintaining position near the center for the trolley.
+  - Stability as the exponential of the negative instability: the stability will increase the reward function if it is near the goal, and decrease the reward funtion if it is away from the goal.
+- **Force punishment**: Derivative of the speed, this will dismunish the reward function if there is too much variation in the speed.
+
+
 ## TODO
 - Write the script for the training
-   - Implement the RL algoritm (also inlcude a way to save the progression !)
+   - Fix the RL algoritm (also inlcude a way to save the progression !)
    - change the launch file to include the training
    - Train the model
