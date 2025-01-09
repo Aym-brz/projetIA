@@ -10,18 +10,24 @@ import time
 max_speed = 50.0
 
 class PendulumEnv(gym.Env, Node):
-    def __init__(self, double_pendulum: bool = True, starting_up: bool = False):
+    def __init__(self, double_pendulum: bool = True, starting_up: bool = False, DQN: bool = False):
         super().__init__('pendulum_env')
         # 
         self.double_pendulum = double_pendulum
-        self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
+        self.DQN = DQN
+        if DQN:
+            self.action_space = gym.spaces.Discrete(50)
+        else:
+            self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(7 if double_pendulum else 5,))
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum, starting_up=starting_up)     
         self.done = False
         self.state = self.joint_state_sub.get_state()
-    
+
+    def map_action_to_speed(action):
+        return np.linspace(-max_speed, max_speed, 50)[action]
    
     def compute_reward(self):
         state = self.state
@@ -47,6 +53,8 @@ class PendulumEnv(gym.Env, Node):
                 - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
         # Set the speed of the trolley
+        if self.DQN:
+            action = self.map_action_to_speed(action)
         self.speed_publisher_node.set_speed(action)
         # Wait for new state 
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)

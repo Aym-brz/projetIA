@@ -79,7 +79,7 @@ from pendulum_env import PendulumEnv
 import rclpy
 
 rclpy.init()
-env = PendulumEnv(double_pendulum=False, starting_up=False)
+env = PendulumEnv(double_pendulum=False, starting_up=False, DQN=True)
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
