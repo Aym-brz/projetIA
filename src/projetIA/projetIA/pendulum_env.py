@@ -1,13 +1,7 @@
 import gym
 import numpy as np
 import rclpy
-from rclpy.service import Service
 from rclpy.node import Node
-from std_msgs.msg import Float64
-from std_srvs.srv import Empty
-from sensor_msgs.msg import JointState
-from tf2_msgs.msg import TFMessage
-import math
 from world_control import GazeboControlClient
 from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
@@ -21,36 +15,23 @@ class PendulumEnv(gym.Env, Node):
         # 
         self.double_pendulum = double_pendulum
         self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(6 if double_pendulum else 4,))
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(7 if double_pendulum else 5,))
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum, starting_up=starting_up)     
         self.done = False
-        self.state = np.zeros(6 if double_pendulum else 4)
+        self.state = self.joint_state_sub.get_state()
     
-    def compute_reward(self, previous_state):
+   
+    def compute_reward(self):
         state = self.state
-        if self.double_pendulum:       
-            instability = 1/100_000*sum([
-                            # 2*180**2,                    # reward for staying alive
-                           -(abs(state[0]-180)%360)**2, # upper joint up
-                            #(abs(state[1])%360),
-                            -min(abs(state[2]%360), abs((state[2]-360))%360)**2,# lower joint straight
-                            #(abs(state[3])%360),
-                            -(state[4]*360/10)**2,                 # center of the rail
-                        ])
+        if self.double_pendulum:
+            # state contains [cos(theta1), sin(theta1), theta1_dot, cos(theta2), sin(theta2), theta2_dot, x, x_dot]
+            reward = 1/2 * (1 - state[0]) + 1/2 *(1 + state[3]) - (abs(state[-2])/5)**2
         else:
-            instability = np.sqrt(sum([  
-                            ((abs(state[0]-180)%360)/180)**2,     # angle deviation
-                            #+ 100 if abs(state[0]-180)%360 < 3 else 0,
-                            (abs(state[1])/1000)**2,            # angular velocity
-                            (abs(state[2])/5)**2       # position on the rail
-                        ])
-            )
-        stability = np.exp(-instability**2/(2*0.3**2))
-        force_punishment = 0.01* (abs(state[3]-previous_state[3])/(2*max_speed))**2
-
-        reward = stability - force_punishment
+            # state contains [cos(theta), sin(theta), theta_dot, x, x_dot]
+            reward = 1/2 * (1 - state[0]) - (abs(state[-2])/5)**2
+            
         return reward
         
     def step(self, action, num_sim_steps: int=1):
@@ -69,16 +50,19 @@ class PendulumEnv(gym.Env, Node):
         self.speed_publisher_node.set_speed(action)
         # Wait for new state 
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)
-        previous_state = np.copy(self.state)
         self.state = self.joint_state_sub.get_state()
         # reward for upright position, close to the center
-        reward = self.compute_reward(previous_state=previous_state)        
+        reward = self.compute_reward()       
 
-        # self.done = abs(state[-2]) >= 5  # done if trolley reaches limits
-        if abs(self.state[-2]) >= 5 :
-            # reward -= 150
+        if abs(self.state[-2]) >= 5 : # done if trolley reaches limits
+            reward -= 400
             self.done = True
-        return self.state, reward, self.done, {}
+            print("Trolley reached limits")
+        
+        if abs(self.state[2]) >= 20: # done if angular velocity is too high
+            print("Angular velocity too high")
+            self.done = True
+        return self.state, reward, self.done, self.done, {}
         
     def reset(self):
         """
@@ -92,7 +76,7 @@ class PendulumEnv(gym.Env, Node):
         state = self.joint_state_sub.get_state()
         # Reset the state
         self.done = False
-        return state
+        return state, {}
 
 def main():
     rclpy.init()

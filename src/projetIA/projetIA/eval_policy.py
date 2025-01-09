@@ -51,12 +51,13 @@ def evaluate_policy(policy: Policy, env: PendulumEnv, num_episodes: int = 10, ma
 def main():
     rclpy.init()
     double_pendulum = False
+    starting_up = False
     max_iter = 3000
 
     # Initialisation de l'environnement
-    env = PendulumEnv(double_pendulum=double_pendulum, starting_up=False)
+    env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up)
 
-    save_path="saved_policies/trained_single_pendulum_policy.pth"
+    save_path="final_trained_single_pendulum_policy.pth"
     # Charger le modèle sauvegardé
     policy = Policy(double_pendulum=double_pendulum)  # Créer une nouvelle instance de Policy
     policy.load_state_dict(torch.load(save_path))  # Charger les poids

@@ -56,6 +56,7 @@ class REINFORCEAgent:
     
     def update(self, best:Policy, batch_size:int=25):
         num_batches = len(self.memory) // batch_size
+        #print(self.memory[:][2])
         for i in range(num_batches):
             #batch = self.memory[i * batch_size : (i + 1) * batch_size]
             batch = [self.memory[i] for i in range(i * batch_size, (i + 1) * batch_size)]            
@@ -122,7 +123,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
 
     for episode in range(num_episodes):
         # Réinitialisation de l'environnement
-        state = env.reset()  # État initial (vecteur de taille 6)
+        state, _ = env.reset()  # État initial (vecteur de taille 6)
         episode_rewards = []
         episode_log_probs = []
         
@@ -133,7 +134,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
             sampled_action, log_prob = agent.act(state)
 
             # Appliquer l'action à l'environnement
-            next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
+            next_state, reward, done, _, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
             
             # Enregistrer la récompense et la log-probabilité
             episode_rewards.append(reward)

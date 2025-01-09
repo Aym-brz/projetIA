@@ -15,7 +15,7 @@ class Policy(nn.Module):
         """
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(6 if double_pendulum else 4, 16),
+            nn.Linear(7 if double_pendulum else 5, 16),
             nn.Tanh(),
             nn.Linear(16, 16),
             nn.Tanh(),
