@@ -51,7 +51,7 @@ class PPO:
 		self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
 
 		# Initialize the covariance matrix used to query the actor for actions
-		self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.5)
+		self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.3)
 		self.cov_mat = torch.diag(self.cov_var)
 
 		# This logger will help us with printing out summaries of each iteration
@@ -200,8 +200,7 @@ class PPO:
 				# Calculate action and make a step in the env. 
 				# Note that rew is short for reward.
 				action, log_prob = self.get_action(obs)
-				obs, rew, terminated, truncated, _ = self.env.step(action)
-
+				obs, rew, terminated, truncated, _ = self.env.step(action, num_sim_steps=self.num_sim_steps)
 				# Don't really care about the difference between terminated or truncated in this, so just combine them
 				done = terminated | truncated
 
@@ -342,7 +341,7 @@ class PPO:
 		self.render_every_i = 10                        # Only render every n iterations
 		self.save_freq = 10                             # How often we save in number of iterations
 		self.seed = None                                # Sets the seed of our program, used for reproducibility of results
-
+		self.num_sim_steps = 5                          # Number of simulation steps to take per environment
 		# Change any default values to custom values for specified hyperparameters
 		for param, val in hyperparameters.items():
 			exec('self.' + param + ' = ' + str(val))

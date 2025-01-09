@@ -20,7 +20,7 @@ class GazeboControlClient(Node):
         request.world_control.reset.all = reset
         self.client.call(request, 0.5)
         
-    def make_simulation_steps(self, num_steps: int=10):
+    def make_simulation_steps(self, num_steps: int=5):
         """Pause the simulation and execute multiple steps.
 
         Args:

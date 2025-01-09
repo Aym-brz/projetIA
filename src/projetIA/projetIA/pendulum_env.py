@@ -8,13 +8,14 @@ from state_subscriber import StateSubscriber
 import time
 
 rclpy.init()
-max_speed = 15.0
+max_speed = 10.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True, starting_up: bool = False):
         super().__init__('pendulum_env')
         self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(7 if double_pendulum else 5,))
+        self.double_pendulum = double_pendulum
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum, starting_up=starting_up)     
@@ -46,7 +47,7 @@ class PendulumEnv(gym.Env, Node):
                 - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
         # Set the speed of the trolley
-        self.speed_publisher_node.set_speed(action)
+        self.speed_publisher_node.set_speed(action*max_speed)
         # Wait for new state 
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         self.state = self.joint_state_sub.get_state()
