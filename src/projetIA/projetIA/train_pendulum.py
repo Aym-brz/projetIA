@@ -1,41 +1,13 @@
 import torch
-import torch.nn as nn
 import torch.optim as optim
-from tensordict.nn.distributions import NormalParamExtractor
-from pendulum_env import PendulumEnv
-from pendulum_env import max_speed
-import numpy as np
-import matplotlib.pyplot as plt
-import rclpy
 from collections import deque
-
-#plt.ion()
-class Policy(nn.Module):
-    def __init__(self, double_pendulum:bool=True):
-        """
-        Initializes the policy network. This network takes the state of the pendulum as input and outputs the action to be taken. The output is scaled to the action space by multiplying with 100.
-
-        The network is composed of two hidden layers of size 64 with ReLU activation, and an output layer of size 1 with Tanh activation.
-        """
-        super().__init__()
-        self.network = nn.Sequential(
-            nn.Linear(6 if double_pendulum else 4, 16),
-            nn.Tanh(),
-            nn.Linear(16, 16),
-            nn.Tanh(),
-            nn.Linear(16, 16),
-            nn.Tanh(),
-            nn.Linear(16,1),
-            nn.Tanh()
-            )
-
-    def forward(self, x):
-        return self.network(x) * max_speed  # scale to action space
+import numpy as np
+from network import Policy
+from pendulum_env import PendulumEnv
     
-
 class REINFORCEAgent:
     def __init__(self, policy:Policy, best:Policy, discount_factor:int=0.99, lr:float=1e-3, memory_size:int=10000, stddev:int=20):
-        """
+        """ 
         Initialise l'agent REINFORCE.
 
         Parameters:
@@ -84,6 +56,7 @@ class REINFORCEAgent:
     
     def update(self, best:Policy, batch_size:int=25):
         num_batches = len(self.memory) // batch_size
+        #print(self.memory[:][2])
         for i in range(num_batches):
             #batch = self.memory[i * batch_size : (i + 1) * batch_size]
             batch = [self.memory[i] for i in range(i * batch_size, (i + 1) * batch_size)]            
@@ -150,7 +123,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
 
     for episode in range(num_episodes):
         # Réinitialisation de l'environnement
-        state = env.reset()  # État initial (vecteur de taille 6)
+        state, _ = env.reset()  # État initial (vecteur de taille 6)
         episode_rewards = []
         episode_log_probs = []
         
@@ -169,7 +142,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
             log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
             # Appliquer l'action à l'environnement
-            next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
+            next_state, reward, done, _, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
             
             # Enregistrer la récompense et la log-probabilité
             episode_rewards.append(reward)
@@ -195,10 +168,10 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
         # Afficher le résultat périodiquement
         print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
         if (episode + 1) % 10 == 0:
-            torch.save(policy.state_dict(), save_path)
+            torch.save(policy.state_dict(), f'{episode+1}_' + save_path)
 
     # Sauvegarde finale du modèle
-    torch.save(policy.state_dict(), save_path)
+    torch.save(policy.state_dict(), 'final_' + save_path)
     print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")
     
     return total_rewards
