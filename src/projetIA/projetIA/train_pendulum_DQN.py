@@ -1,67 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Reinforcement Learning (DQN) Tutorial
-=====================================
-**Author**: `Adam Paszke <https://github.com/apaszke>`_
-            `Mark Towers <https://github.com/pseudo-rnd-thoughts>`_
-
-
-This tutorial shows how to use PyTorch to train a Deep Q Learning (DQN) agent
-on the CartPole-v1 task from `Gymnasium <https://gymnasium.farama.org>`__.
-
-You might find it helpful to read the original `Deep Q Learning (DQN) <https://arxiv.org/abs/1312.5602>`__ paper
-
-**Task**
-
-The agent has to decide between two actions - moving the cart left or
-right - so that the pole attached to it stays upright. You can find more
-information about the environment and other more challenging environments at
-`Gymnasium's website <https://gymnasium.farama.org/environments/classic_control/cart_pole/>`__.
-
-.. figure:: /_static/img/cartpole.gif
-   :alt: CartPole
-
-   CartPole
-
-As the agent observes the current state of the environment and chooses
-an action, the environment *transitions* to a new state, and also
-returns a reward that indicates the consequences of the action. In this
-task, rewards are +1 for every incremental timestep and the environment
-terminates if the pole falls over too far or the cart moves more than 2.4
-units away from center. This means better performing scenarios will run
-for longer duration, accumulating larger return.
-
-The CartPole task is designed so that the inputs to the agent are 4 real
-values representing the environment state (position, velocity, etc.).
-We take these 4 inputs without any scaling and pass them through a 
-small fully-connected network with 2 outputs, one for each action. 
-The network is trained to predict the expected value for each action, 
-given the input state. The action with the highest expected value is 
-then chosen.
-
-
-**Packages**
-
-
-First, let's import needed packages. Firstly, we need
-`gymnasium <https://gymnasium.farama.org/>`__ for the environment,
-installed by using `pip`. This is a fork of the original OpenAI
-Gym project and maintained by the same team since Gym v0.19.
-If you are running this in Google Colab, run:
-
-.. code-block:: bash
-
-   %%bash
-   pip3 install gymnasium[classic_control]
-
-We'll also use the following from PyTorch:
-
--  neural networks (``torch.nn``)
--  optimization (``torch.optim``)
--  automatic differentiation (``torch.autograd``)
-
-"""
-
 import gym
 import math
 import random
@@ -258,12 +195,13 @@ class DQN(nn.Module):
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
 BATCH_SIZE = 128
-GAMMA = 0.99
+MAX_EPISODE_LENGTH = 800
+GAMMA = 0.995
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 1000
 TAU = 0.005
-LR = 1e-4
+LR = 0.0003
 
 # Get number of actions from gym action space
 n_actions = env.action_space.n
@@ -273,6 +211,15 @@ n_observations = len(state)
 
 policy_net = DQN(n_observations, n_actions).to(device)
 target_net = DQN(n_observations, n_actions).to(device)
+
+# Load the saved policies if they exist
+try:
+    policy_net.load_state_dict(torch.load("saved_policies/policy_net_DQN.pth"))
+    target_net.load_state_dict(torch.load("saved_policies/target_net_DQN.pth"))
+    print("Loaded saved policies.")
+except FileNotFoundError:
+    print("No saved policies found. Starting training from scratch.")
+    
 target_net.load_state_dict(policy_net.state_dict())
 
 optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
@@ -299,6 +246,7 @@ def select_action(state):
 
 
 episode_durations = []
+episode_rewards = []
 
 
 def plot_durations(show_result=False):
@@ -319,19 +267,41 @@ def plot_durations(show_result=False):
         plt.plot(means.numpy())
 
     plt.pause(0.001)  # pause a bit so that plots are updated
-    if is_ipython:
-        if not show_result:
-            display.display(plt.gcf())
-            display.clear_output(wait=True)
-        else:
-            display.display(plt.gcf())
+    # if is_ipython:
+    #     if not show_result:
+    #         display.display(plt.gcf())
+    #         display.clear_output(wait=True)
+    #     else:
+    #         display.display(plt.gcf())
 
+def plot_reward(show_result=False):
+    plt.figure(2)
+    durations_t = torch.tensor(episode_rewards, dtype=torch.float)
+    if show_result:
+        plt.title('Result')
+    else:
+        plt.clf()
+        plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
+
+    plt.pause(0.001)  # pause a bit so that plots are updated
+    # if is_ipython:
+    #     if not show_result:
+    #         display.display(plt.gcf())
+    #         display.clear_output(wait=True)
+    #     else:
+    #         display.display(plt.gcf())
 
 ######################################################################
 # Training loop
 # ^^^^^^^^^^^^^
-#
-# Finally, the code for training our model.
 #
 # Here, you can find an ``optimize_model`` function that performs a
 # single step of the optimization. It first samples a batch, concatenates
@@ -407,26 +377,28 @@ def optimize_model():
 # can produce better results if convergence is not observed.
 #
 
-if torch.cuda.is_available() or torch.backends.mps.is_available():
-    num_episodes = 600
-else:
-    num_episodes = 50
+num_episodes = 5000
+best_reward = 0
 
 for i_episode in range(num_episodes):
     # Initialize the environment and get its state
     state, info = env.reset()
     state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+    total_episode_reward = 0
     for t in count():
         action = select_action(state)
         observation, reward, terminated, truncated, _ = env.step(action.item())
+        total_episode_reward += reward
         reward = torch.tensor([reward], device=device)
         done = terminated or truncated
 
+        if t>=MAX_EPISODE_LENGTH:
+            done = True
+            
         if terminated:
             next_state = None
         else:
             next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
-
         # Store the transition in memory
         memory.push(state, action, next_state, reward)
 
@@ -446,11 +418,23 @@ for i_episode in range(num_episodes):
 
         if done:
             episode_durations.append(t + 1)
-            plot_durations()
+            episode_rewards.append(total_episode_reward)
+            if reward > best_reward:
+                best_reward = reward
+                torch.save(policy_net.state_dict(), f"saved_policies/best_policy_net_DQN.pth")
+            # plot_durations()
+            plot_reward()
             break
+    # Save the model every 100 episodes
+    if i_episode % 100 == 0:
+        torch.save(policy_net.state_dict(), f"saved_policies/policy_net_DQN.pth")
+        torch.save(target_net.state_dict(), f"saved_policies/target_net_DQN.pth")
+
+
 
 print('Complete')
 plot_durations(show_result=True)
+plot_reward(show_result=True)
 plt.ioff()
 plt.show()
 

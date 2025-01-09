@@ -7,7 +7,7 @@ from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 import time
 
-max_speed = 50.0
+max_speed = 5.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True, starting_up: bool = False, DQN: bool = False):
@@ -16,7 +16,8 @@ class PendulumEnv(gym.Env, Node):
         self.double_pendulum = double_pendulum
         self.DQN = DQN
         if DQN:
-            self.action_space = gym.spaces.Discrete(50)
+            self.discretizition = 25
+            self.action_space = gym.spaces.Discrete(self.discretizition)
         else:
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(7 if double_pendulum else 5,))
@@ -26,8 +27,8 @@ class PendulumEnv(gym.Env, Node):
         self.done = False
         self.state = self.joint_state_sub.get_state()
 
-    def map_action_to_speed(action):
-        return np.linspace(-max_speed, max_speed, 50)[action]
+    def map_action_to_speed(self, action):
+        return np.linspace(-max_speed, max_speed, self.discretizition)[action]
    
     def compute_reward(self):
         state = self.state
