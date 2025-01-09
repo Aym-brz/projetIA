@@ -18,7 +18,7 @@ class PendulumEnv(gym.Env, Node):
         if DQN:
             self.action_space = gym.spaces.Discrete(50)
         else:
-            self.action_space = gym.spaces.Box(low=-max_speed, high=max_speed, shape=(1,))
+            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(1,))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(7 if double_pendulum else 5,))
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
@@ -55,7 +55,7 @@ class PendulumEnv(gym.Env, Node):
         # Set the speed of the trolley
         if self.DQN:
             action = self.map_action_to_speed(action)
-        self.speed_publisher_node.set_speed(action)
+        self.speed_publisher_node.set_speed(action*max_speed)
         # Wait for new state 
         self.gazebo_control_client.make_simulation_steps(num_sim_steps)
         self.state = self.joint_state_sub.get_state()
