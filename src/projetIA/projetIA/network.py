@@ -1,19 +1,15 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from tensordict.nn.distributions import NormalParamExtractor
+import numpy as np
 from pendulum_env import PendulumEnv
 from pendulum_env import max_speed
-import numpy as np
-import matplotlib.pyplot as plt
-import rclpy
-from collections import deque
+
 
 #plt.ion()
 class Policy(nn.Module):
     def __init__(self, double_pendulum:bool=True):
         """
-        Initializes the policy network. This network takes the state of the pendulum as input and outputs the action to be taken. The output is scaled to the action space by multiplying with 100.
+        Initializes the policy network. This network takes the state of the pendulum as input and outputs the action to be taken. The output is scaled to the action space by multiplying with max_speed.
 
         The network is composed of two hidden layers of size 64 with ReLU activation, and an output layer of size 1 with Tanh activation.
         """

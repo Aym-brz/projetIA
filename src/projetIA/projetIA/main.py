@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import rclpy
 from network import Policy
 from eval_policy import evaluate_policy
+from pendulum_env import max_speed
 
 # choose the training method : 
 first_method = True
@@ -13,7 +14,6 @@ else:
     from train_pendulum_reinforce import train
 
 def main():
-    rclpy.init()
     double_pendulum = False
     starting_up = True
     # Hyperparamètres
@@ -22,12 +22,13 @@ def main():
     learning_rate = 1e-3
     max_iter = 3000
     num_sim_step = 1
-    stddev = 10
+    stddev = max_speed/10
     load_path = "trained_single_pendulum_policy.pth" # model to load to resume training
     save_path= "trained_single_pendulum_policy.pth" # path to save the model
     batch_size = int(num_episodes/25)
 
     # Initialisation de l'environnement
+    rclpy.init()
     env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up)
 
     # Vérification des dimensions d'état et d'action
