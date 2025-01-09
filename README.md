@@ -169,14 +169,14 @@ pip install -r requirements.txt
 ```plaintext
 projectroot
 ├── src/
-│   ├── config/                           # Contains configuration files
+│   ├── config/                        # Contains configuration files
 │   │   └── bridge_config.yaml      
-│   ├── models/                           # Contains SDF models
+│   ├── models/                        # Contains SDF models
 │   │   └── double_pendulum_rail.sdf      # Description of the robot (geometry, joints, aspect, environment)
 │   │   └── default_world.sdf             # Default empty environment
-│   ├── launch/                           # Contains launch files for the simulation
+│   ├── launch/                        # Contains launch files for the simulation
 │   │   └── pendulum.launch.py      
-│   ├── projetIA/                         # Python library for the project
+│   ├── projetIA/                      # Python library for the project
 │   │   └── eval_policy.py                # Evaluate the best policy obtain after the training
 │   │   └── main.py                       # Launch the training and the evaluation
 │   │   └── network.py                    # Class of the network policy
@@ -186,9 +186,9 @@ projectroot
 │   │   └── train_pendulum.py             # Training script
 │   │   └── train_pendulum_reinforce.py   # Training script test (other version of the implementation but no better results)
 │   │   └── world_control.py              # ROS node to start, pause and reset the simulation
-│   ├── README.md                         # Documentation
-│   ├── setup.py                          # Setup script for the ROS 2 package
-│   └── package.xml                       # ROS 2 package metadata
+│   ├── README.md                      # Documentation
+│   ├── setup.py                       # Setup script for the ROS 2 package
+│   └── package.xml                    # ROS 2 package metadata
 ├── README.md
 └── requirements.txt
 
