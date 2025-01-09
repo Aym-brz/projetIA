@@ -56,6 +56,7 @@ class REINFORCEAgent:
     
     def update(self, best:Policy, batch_size:int=25):
         num_batches = len(self.memory) // batch_size
+        #print(self.memory[:][2])
         for i in range(num_batches):
             #batch = self.memory[i * batch_size : (i + 1) * batch_size]
             batch = [self.memory[i] for i in range(i * batch_size, (i + 1) * batch_size)]            
@@ -91,6 +92,7 @@ class REINFORCEAgent:
             # Compute policy loss
             log_probs = torch.tensor(log_probs, dtype=torch.float32, requires_grad=True)
             policy_loss_onebatch = -torch.sum(log_probs * returns)
+            print()
             policy_loss.append(policy_loss_onebatch)
         total_policy_loss = torch.stack(policy_loss).sum()
         

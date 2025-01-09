@@ -2,7 +2,7 @@
 <sdf version="1.6">
   <world name="default">
     <physics name="1ms" type="ode">
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.01</max_step_size>
       <real_time_factor>1</real_time_factor>
     </physics>
 
@@ -104,7 +104,7 @@
           <xyz>1.0 0 0</xyz>
           <dynamics>
             <damping>0</damping>
-            <friction>1</friction>
+            <friction>0.9</friction>
           </dynamics>
           <limit>
             <lower>-1e+16</lower>

@@ -15,9 +15,9 @@ else:
 
 def main():
     double_pendulum = False
-    starting_up = True
+    starting_up = False
     # Hyperparamètres
-    num_episodes = 350
+    num_episodes = 1000
     discount_factor = 0.95
     learning_rate = 1e-3
     max_iter = 3000
@@ -42,7 +42,7 @@ def main():
     try:
         policy.load_state_dict(torch.load(load_path))
     except:
-        pass
+        print('No policy found, trai')
 
     # Entraînement de la politique
     total_rewards = train(policy, env, num_episodes=num_episodes, discount_factor=discount_factor, lr=learning_rate, max_iter=max_iter, num_sim_steps=num_sim_step, save_path=save_path, batch_size=batch_size, stddev=stddev)
