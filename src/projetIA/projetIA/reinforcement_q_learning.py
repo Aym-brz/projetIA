@@ -62,7 +62,7 @@ We'll also use the following from PyTorch:
 
 """
 
-import gymnasium as gym
+import gym
 import math
 import random
 import matplotlib
@@ -75,7 +75,11 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-env = gym.make("CartPole-v1")
+from pendulum_env import PendulumEnv
+import rclpy
+
+rclpy.init()
+env = PendulumEnv(double_pendulum=False, starting_up=False)
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()

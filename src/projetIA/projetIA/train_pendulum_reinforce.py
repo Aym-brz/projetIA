@@ -126,14 +126,14 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
     agent = REINFORCEAgent(policy=policy, best=policy, discount_factor=discount_factor, lr=lr, stddev=stddev)
     total_rewards = [] 
     for episode in range(num_episodes):
-        state = env.reset()
+        state, _ = env.reset()
         episode_memory = []
         episode_reward = 0
         done = False
 
         while not done:
             action, log_prob = agent.act(state)
-            next_state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ , _= env.step(action)
             episode_memory.append((state, action, reward, log_prob))
             state = next_state
             episode_reward += reward

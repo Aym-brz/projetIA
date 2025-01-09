@@ -17,13 +17,13 @@ def main():
     double_pendulum = False
     starting_up = False
     # Hyperparamètres
-    num_episodes = 1000
+    num_episodes = 300
     discount_factor = 0.95
     learning_rate = 1e-3
-    max_iter = 3000
-    num_sim_step = 1
+    max_iter = 800
+    num_sim_step = 5
     stddev = max_speed/10
-    load_path = "trained_single_pendulum_policy.pth" # model to load to resume training
+    load_path = "best_trained_single_pendulum_policy.pth" # model to load to resume training
     save_path= "trained_single_pendulum_policy.pth" # path to save the model
     batch_size = int(num_episodes/25)
 
@@ -42,7 +42,7 @@ def main():
     try:
         policy.load_state_dict(torch.load(load_path))
     except:
-        print('No policy found, trai')
+        print('No policy found, training from scratch') 
 
     # Entraînement de la politique
     total_rewards = train(policy, env, num_episodes=num_episodes, discount_factor=discount_factor, lr=learning_rate, max_iter=max_iter, num_sim_steps=num_sim_step, save_path=save_path, batch_size=batch_size, stddev=stddev)

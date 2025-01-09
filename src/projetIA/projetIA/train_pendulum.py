@@ -92,7 +92,6 @@ class REINFORCEAgent:
             # Compute policy loss
             log_probs = torch.tensor(log_probs, dtype=torch.float32, requires_grad=True)
             policy_loss_onebatch = -torch.sum(log_probs * returns)
-            print()
             policy_loss.append(policy_loss_onebatch)
         total_policy_loss = torch.stack(policy_loss).sum()
         
@@ -124,7 +123,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
 
     for episode in range(num_episodes):
         # Réinitialisation de l'environnement
-        state = env.reset()  # État initial (vecteur de taille 6)
+        state, _ = env.reset()  # État initial (vecteur de taille 6)
         episode_rewards = []
         episode_log_probs = []
         
@@ -135,7 +134,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
             sampled_action, log_prob = agent.act(state)
 
             # Appliquer l'action à l'environnement
-            next_state, reward, done, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
+            next_state, reward, done, _, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
             
             # Enregistrer la récompense et la log-probabilité
             episode_rewards.append(reward)
