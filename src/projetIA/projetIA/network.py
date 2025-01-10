@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from pendulum_env import PendulumEnv
+import torch.nn.functional as F
+
 
 #plt.ion()
-class Policy(nn.Module):
+class FeedForwardNetwork(nn.Module):
     def __init__(self, double_pendulum:bool=True):
         """
         Initializes the policy network. This network takes the state of the pendulum as input and outputs the action to be taken.
@@ -25,11 +26,26 @@ class Policy(nn.Module):
 
     def forward(self, x):
         return self.network(x)  # scale to action space
+    
 
+class DQN_NN(nn.Module):
+    def __init__(self, n_observations, n_actions):
+        super(DQN_NN, self).__init__()
+        self.layer1 = nn.Linear(n_observations, 128)
+        self.layer2 = nn.Linear(128, 128)
+        self.layer3 = nn.Linear(128, n_actions)
+    # Called with either one element to determine next action, or a batch
+    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+    def forward(self, x):
+        x = F.relu(self.layer1(x))
+        x = F.relu(self.layer2(x))
+        return self.layer3(x)
+
+    
 def main():
     double_pendulum = False
     save_path = 'pendulum_policy.pth'
-    policy = Policy(double_pendulum=double_pendulum)
+    policy = FeedForwardNetwork(double_pendulum=double_pendulum)
     try:
         policy.load_state_dict(torch.load('best_'+save_path))
     except:

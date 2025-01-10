@@ -2,9 +2,10 @@ import torch
 from pendulum_env import PendulumEnv
 import matplotlib.pyplot as plt
 import rclpy
-from network import Policy
+from network import FeedForwardNetwork
+from network import DQN
 
-def evaluate_policy(policy: Policy, env: PendulumEnv, num_episodes: int = 10, max_iter: int = 2000, num_sim_step:int = 1, plot=True):
+def evaluate_policy(policy: FeedForwardNetwork|DQN, env: PendulumEnv, num_episodes: int = 10, max_iter: int = 2000, num_sim_step:int = 1, plot=True):
     """
     Évalue la politique entraînée sur l'environnement du pendule.
 
@@ -30,7 +31,7 @@ def evaluate_policy(policy: Policy, env: PendulumEnv, num_episodes: int = 10, ma
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
             with torch.no_grad():
                 action = policy(state_tensor)
-            next_state, reward, done, _ = env.step(action.item(), num_sim_steps=num_sim_step)
+            next_state, reward, done, _ , _ = env.step(action.item(), num_sim_steps=num_sim_step)
             episode_rewards.append(reward)
             state = next_state
             iter += 1
@@ -53,15 +54,20 @@ def main():
     double_pendulum = False
     starting_up = False
     max_iter = 3000
+    is_DQN = False
+    
 
     # Initialisation de l'environnement
-    env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up)
+    env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up, DQN=is_DQN)
 
     save_path="final_trained_single_pendulum_policy.pth"
     # Charger le modèle sauvegardé
-    policy = Policy(double_pendulum=double_pendulum)  # Créer une nouvelle instance de Policy
+    if is_DQN:
+        policy = DQN(env.observation_space.shape[0], env.action_space.shape[0])
+    else:
+        policy = FeedForwardNetwork(double_pendulum=double_pendulum)  # Créer une nouvelle instance de Policy
+    
     policy.load_state_dict(torch.load(save_path))  # Charger les poids
-
     # Évaluation de la politique entraînée
     evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter, plot=True)
     

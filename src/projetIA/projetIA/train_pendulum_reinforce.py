@@ -4,11 +4,11 @@ from collections import deque
 import random
 import matplotlib
 import matplotlib.pyplot as plt 
-from network import Policy
+from network import FeedForwardNetwork
 from pendulum_env import PendulumEnv
 
 class REINFORCEAgent:
-    def __init__(self, policy:Policy, best:Policy, discount_factor:int=0.99, lr:float=1e-3, memory_size:int=10000, stddev:int=20):
+    def __init__(self, policy:FeedForwardNetwork, best:FeedForwardNetwork, discount_factor:int=0.99, lr:float=1e-3, memory_size:int=10000, stddev:int=20):
         """
         Initialise l'agent REINFORCE.
 
@@ -129,7 +129,7 @@ def plot_reward(total_rewards, show_result=False):
 
     plt.pause(0.001) 
 
-def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25, stddev:int=20):
+def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, discount_factor:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25, stddev:int=20):
     """
     Entraîne le modèle Policy pour stabiliser un double pendule.
     
