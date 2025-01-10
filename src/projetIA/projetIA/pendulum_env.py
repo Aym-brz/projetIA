@@ -7,7 +7,7 @@ from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 import time
 
-max_speed = 5.0
+max_speed = 4.5
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True, starting_up: bool = False, DQN: bool = False):

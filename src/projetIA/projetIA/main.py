@@ -6,8 +6,12 @@ from network import Policy
 from eval_policy import evaluate_policy
 
 # choose the training method : 
+DQN = False
 first_method = True
-if first_method:
+
+if DQN:
+    from train_pendulum_DQN import train
+elif first_method:
     from train_pendulum import train
 else:
     from train_pendulum_reinforce import train

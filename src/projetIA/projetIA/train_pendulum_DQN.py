@@ -3,7 +3,7 @@ import gym
 import math
 import random
 import matplotlib
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 from collections import namedtuple, deque
 from itertools import count
 
@@ -194,7 +194,7 @@ class DQN(nn.Module):
 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 MAX_EPISODE_LENGTH = 800
 GAMMA = 0.995
 EPS_START = 0.9
@@ -214,16 +214,21 @@ target_net = DQN(n_observations, n_actions).to(device)
 
 # Load the saved policies if they exist
 try:
-    policy_net.load_state_dict(torch.load("saved_policies/policy_net_DQN.pth"))
-    target_net.load_state_dict(torch.load("saved_policies/target_net_DQN.pth"))
-    print("Loaded saved policies.")
+        policy_net.load_state_dict(torch.load("saved_policies/best_policy_net_DQN.pth"))
+        target_net.load_state_dict(torch.load("saved_policies/best_target_net_DQN.pth"))
+        print("Loaded saved best policies.")
 except FileNotFoundError:
-    print("No saved policies found. Starting training from scratch.")
+    try:
+        policy_net.load_state_dict(torch.load("saved_policies/policy_net_DQN.pth"))
+        target_net.load_state_dict(torch.load("saved_policies/target_net_DQN.pth"))
+        print("Loaded saved policies.")
+    except FileNotFoundError:
+        print("No saved policies found. Starting training from scratch.")
     
 target_net.load_state_dict(policy_net.state_dict())
 
 optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-memory = ReplayMemory(10000)
+memory = ReplayMemory(20_000)
 
 
 steps_done = 0
@@ -422,19 +427,21 @@ for i_episode in range(num_episodes):
             if reward > best_reward:
                 best_reward = reward
                 torch.save(policy_net.state_dict(), f"saved_policies/best_policy_net_DQN.pth")
+                torch.save(target_net.state_dict(), f"saved_policies/best_target_net_DQN.pth")
             # plot_durations()
             plot_reward()
             break
     # Save the model every 100 episodes
-    if i_episode % 100 == 0:
-        torch.save(policy_net.state_dict(), f"saved_policies/policy_net_DQN.pth")
-        torch.save(target_net.state_dict(), f"saved_policies/target_net_DQN.pth")
+    if i_episode % 10 == 0:
+        torch.save(policy_net.state_dict(), f"saved_policies/policy_net_DQN_{i_episode}.pth")
+        torch.save(target_net.state_dict(), f"saved_policies/target_net_DQN_{i_episode}.pth")
 
 
 
 print('Complete')
 plot_durations(show_result=True)
 plot_reward(show_result=True)
+plt.savefig("plot_results\DQN_training.png")
 plt.ioff()
 plt.show()
 
