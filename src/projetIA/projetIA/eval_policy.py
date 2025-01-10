@@ -3,9 +3,9 @@ from pendulum_env import PendulumEnv
 import matplotlib.pyplot as plt
 import rclpy
 from network import FeedForwardNetwork
-from network import DQN
+from network import DQN_NN
 
-def evaluate_policy(policy: FeedForwardNetwork|DQN, env: PendulumEnv, num_episodes: int = 10, max_iter: int = 2000, num_sim_step:int = 1, plot=True):
+def evaluate_policy(policy: FeedForwardNetwork|DQN_NN, env: PendulumEnv, num_episodes: int = 10, max_iter: int = 2000, num_sim_step:int = 1, plot=True):
     """
     Évalue la politique entraînée sur l'environnement du pendule.
 

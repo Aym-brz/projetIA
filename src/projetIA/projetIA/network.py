@@ -14,13 +14,13 @@ class FeedForwardNetwork(nn.Module):
         """
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(7 if double_pendulum else 5, 16),
+            nn.Linear(7 if double_pendulum else 5, 128),
             nn.Tanh(),
-            nn.Linear(16, 16),
+            nn.Linear(128, 128),
             nn.Tanh(),
-            nn.Linear(16, 16),
+            nn.Linear(128, 128),
             nn.Tanh(),
-            nn.Linear(16,1),
+            nn.Linear(128,1),
             nn.Tanh()
             )
 

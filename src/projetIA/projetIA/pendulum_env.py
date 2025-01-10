@@ -41,7 +41,7 @@ class PendulumEnv(gym.Env, Node):
             
         return reward
         
-    def step(self, action, num_sim_steps: int=1):
+    def step(self, action, num_sim_steps: int=5):
         """
         Execute one step in the environment with the given action.
         Args:

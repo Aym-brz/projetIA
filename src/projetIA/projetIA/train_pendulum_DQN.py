@@ -91,6 +91,7 @@ class DQN_Agent:
             means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
             means = torch.cat((torch.zeros(99), means))
             plt.plot(means.numpy())
+        plt.pause(0.001)
         
     def optimize_model(self):
         if len(self.memory) < self.BATCH_SIZE:
@@ -160,13 +161,14 @@ class DQN_Agent:
         self.TAU = 0.005
         self.LR = 0.0003
         self.MEM_SIZE = 20000
+        self.NUM_SIM_STEPS = 5
         # Change any default values to custom values for specified hyperparameters
         for param, val in hyperparameters.items():
             exec('self.' + param + ' = ' + str(val))
    
 
 
-def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:int=5000, **hyperparameters):
+def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:int=5000, save_path:str="saved_policies/DQN", **hyperparameters):
     
     """
     Trains the Policy model to stabilize the pendulum.
@@ -197,7 +199,7 @@ def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:
         total_episode_reward = 0
         for t in count():
             action = agent.select_action(state)
-            observation, reward, terminated, truncated, _ = env.step(action.item())
+            observation, reward, terminated, truncated, _ = env.step(action.item(), num_sim_steps=agent.NUM_SIM_STEPS)
             total_episode_reward += reward
             reward = torch.tensor([reward])
             done = terminated or truncated
@@ -222,7 +224,7 @@ def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:
             target_net_state_dict = target_net.state_dict()
             policy_net_state_dict = policy_net.state_dict()
             for key in policy_net_state_dict:
-                target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+                target_net_state_dict[key] = policy_net_state_dict[key]*agent.TAU + target_net_state_dict[key]*(1-agent.TAU)
             target_net.load_state_dict(target_net_state_dict)
 
             if done:
@@ -230,23 +232,22 @@ def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:
                 agent.episode_rewards.append(total_episode_reward)
                 if reward > best_reward:
                     best_reward = reward
-                    torch.save(policy_net.state_dict(), f"saved_policies/best_policy_net_DQN.pth")
-                    torch.save(target_net.state_dict(), f"saved_policies/best_target_net_DQN.pth")
+                    torch.save(policy_net.state_dict(), f"{save_path}/best_policy_DQN_{best_reward}.pth")
+                    torch.save(target_net.state_dict(), f"{save_path}/best_target_DQN_{best_reward}.pth")
                 # agent.plot_durations()
                 agent.plot_reward()
                 break
         # Save the model every 100 episodes
         if i_episode % 10 == 0:
-            torch.save(policy_net.state_dict(), f"saved_policies/policy_net_DQN_{i_episode}.pth")
-            torch.save(target_net.state_dict(), f"saved_policies/target_net_DQN_{i_episode}.pth")
+            torch.save(policy_net.state_dict(), f"{save_path}/policy_DQN_{i_episode}.pth")
+            torch.save(target_net.state_dict(), f"{save_path}/target_DQN_{i_episode}.pth")
     print('Complete')
-    agent.plot_durations(show_result=True)
     agent.plot_reward(show_result=True)
-    plt.savefig("plot_results\DQN_training.png")
+    plt.savefig(f"{save_path}/DQN_training.png")
     plt.ioff()
     plt.show()
     
-    torch.save(policy_net.state_dict(), f"saved_policies/final_policy_net_DQN.pth")
-    torch.save(target_net.state_dict(), f"saved_policies/final_target_net_DQN.pth")
+    torch.save(policy_net.state_dict(), f"{save_path}/final_policy_DQN.pth")
+    torch.save(target_net.state_dict(), f"{save_path}/final_target_DQN.pth")
     
     return agent.episode_rewards

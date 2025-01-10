@@ -127,7 +127,8 @@ class REINFORCEAgent:
         self.STDDEV_START = 0.3
         self.STDDEV_END = 0.05
         self.STDDEV_DECAY = 500
-        
+        self.NUM_SIM_STEPS = 5
+
         # Change any default values to custom values for specified hyperparameters
         for param, val in hyperparameters.items():
             exec('self.' + param + ' = ' + str(val))
@@ -152,7 +153,7 @@ class REINFORCEAgent:
 
         plt.pause(0.001) 
 
-def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, save_path:str="trained_policy.pth", **hyperparameters):
+def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, save_path:str="saved_policies/reinforce2", **hyperparameters):
 
     """
     Trains the Policy model to stabilize the pendulum.
@@ -183,7 +184,7 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
         iter = 0
         while not done and iter < agent.MAX_EPISODE_LENGTH:
             action, log_prob = agent.act(state)
-            next_state, reward, done, _ , _= env.step(action)
+            next_state, reward, done, _ , _= env.step(action, agent.NUM_SIM_STEPS)
             episode_memory.append((state, action, reward, log_prob))
             state = next_state
             episode_reward += reward
@@ -204,14 +205,14 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
 
         print(f"Épisode {episode + 1}/{num_episodes}, Récompense : {episode_reward}")
         if (episode + 1) % 10 == 0:
-            torch.save(policy.state_dict(), f'{episode+1}_' + save_path)
+            torch.save(policy.state_dict(), f"{save_path}/policy_REINFORCE2_{episode +1}.pth")
 
     # Sauvegarde finale du modèle
-    torch.save(policy.state_dict(), 'final_' + save_path)
+    torch.save(policy.state_dict(), f"{save_path}/final_policy_REINFORCE2.pth")
     print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")
 
     agent.plot_reward(show_result=True)
-    plt.savefig("plot_results\reinforce_training.png")
+    plt.savefig(f"{save_path}/reinforce2_training.png")
     plt.ioff()
     plt.show()
     

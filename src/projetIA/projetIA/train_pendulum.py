@@ -117,20 +117,21 @@ class REINFORCEAgent:
         # Initialize default values for hyperparameters
         # Algorithm hyperparameters
         self.BATCH_SIZE = 25
-        self.GAMMA = 0.995
-        self.LR = 0.0003
+        self.GAMMA = 0.95
+        self.LR = 1e-3
         self.MEM_SIZE = 10000
         self.MAX_EPISODE_LENGTH = 800
         self.STDDEV_START = 0.3
         self.STDDEV_END = 0.05
-        self.STDDEV_DECAY = 500
+        self.NUM_SIM_STEPS = 5
+        self.STDDEV = self.STDDEV_START
         
         # Change any default values to custom values for specified hyperparameters
         for param, val in hyperparameters.items():
             exec('self.' + param + ' = ' + str(val))
 
     def plot_reward(self, show_result=False):
-        plt.figure(2)
+        plt.figure(1)
         durations_t = torch.tensor(self.total_rewards, dtype=torch.float)
         if show_result:
             plt.title('Result')
@@ -145,9 +146,10 @@ class REINFORCEAgent:
             means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
             means = torch.cat((torch.zeros(99), means))
             plt.plot(means.numpy())
+        plt.pause(0.001)
 
-def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, save_path:str="trained_policy.pth", **hyperparameters):
 
+def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, save_path:str="saved_policies/reinforce", **hyperparameters):
     """
     Trains the Policy model to stabilize the pendulum.
     
@@ -169,7 +171,7 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
     """
     plt.ion()
     agent = REINFORCEAgent(policy=policy, best=policy, hyperparameters=hyperparameters)
-    best_reward = -np.inf
+    best_reward = 0
     for episode in range(num_episodes):
         # Réinitialisation de l'environnement
         state, _ = env.reset()  # État initial (vecteur de taille 6)
@@ -182,7 +184,7 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
             sampled_action, log_prob = agent.act(state)
 
             # Appliquer l'action à l'environnement
-            next_state, reward, done, _, _ = env.step(sampled_action.item(), num_sim_steps=num_sim_steps)
+            next_state, reward, done, _, _ = env.step(sampled_action.item(), num_sim_steps=agent.NUM_SIM_STEPS)
             
             # Enregistrer la récompense et la log-probabilité
             episode_rewards.append(reward)
@@ -195,8 +197,9 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
         total_episode_reward = sum(episode_rewards)
         agent.total_rewards.append(total_episode_reward)
         if total_episode_reward > best_reward:
-            torch.save(policy.state_dict(), "best_"+save_path)
+            torch.save(policy.state_dict(), f"{save_path}/best_policy_REINFORCE_{best_reward}.pth")
             agent.best = policy
+            best_reward = total_episode_reward
 
         agent.remember(state, sampled_action, episode_rewards, episode_log_probs)
         agent.plot_reward()
@@ -207,18 +210,18 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
             agent.STDDEV = agent.STDDEV_END + (agent.STDDEV_START - agent.STDDEV_END) * \
             np.exp(-1. * episode/(num_episodes/5))
         
+        # print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
         # Afficher le résultat périodiquement
-        print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
         if (episode + 1) % 10 == 0:
-            torch.save(policy.state_dict(), f'{episode+1}_' + save_path)
+            torch.save(policy.state_dict(), f"{save_path}/policy_REINFORCE_{episode+1}.pth")
 
     # Sauvegarde finale du modèle
-    torch.save(policy.state_dict(), 'final_' + save_path)
+    torch.save(policy.state_dict(), f"{save_path}/final_policy_REINFORCE.pth")
     print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")  
     print('Complete')
     
     agent.plot_reward(show_result=True)
-    plt.savefig("plot_results\reinforce_training.png")
+    plt.savefig(f"{save_path}/reinforce_training.png")
     plt.ioff()
     plt.show()
     return agent.total_rewards
