@@ -38,7 +38,7 @@ class DQN_Agent:
         self.policy_net = policy_net
         self.target_net = target_net    
         self.optimizer = optim.AdamW(policy_net.parameters(), lr=self.LR, amsgrad=True)
-        self.memory = ReplayMemory(20_000)
+        self.memory = ReplayMemory(self.MEM_SIZE)
         self.steps_done = 0
         self.episode_durations = []
         self.episode_rewards = []
@@ -156,19 +156,40 @@ class DQN_Agent:
         self.GAMMA = 0.995
         self.EPS_START = 0.9
         self.EPS_END = 0.05
-        self.EPS_DECAY = 1000
+        self.EPS_DECAY = 8000
         self.TAU = 0.005
         self.LR = 0.0003
+        self.MEM_SIZE = 20000
         # Change any default values to custom values for specified hyperparameters
         for param, val in hyperparameters.items():
             exec('self.' + param + ' = ' + str(val))
    
 
 
-def train(policy_net, target_net, env:PendulumEnv, num_episodes:int=5000, **hyperparameters):
+def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:int=5000, **hyperparameters):
+    
+    """
+    Trains the Policy model to stabilize the pendulum.
+    
+    Arguments:
+    - policy: an instance of the Policy class (the neural network).
+    - env: an instance of the environment (such as PendulumEnv).
+    - num_episodes: total number of training episodes.
+    - save_path: path to the policy save file.
+    - hyperparameters: dictionary containing the following hyperparameters:
+        - BATCH_SIZE: batch size (in episodes).
+        - MAX_EPISODE_LENGTH: maximum length of an episode.
+        - GAMMA: discount factor.
+        - LR: learning rate.
+        - MEM_SIZE: memory size.
+        - STDDEV_START: initial standard deviation for action sampling.
+        - STDDEV_END: final standard deviation (exponential decay over the training).
+    Returns:
+    - total_rewards: a list containing the total rewards for each episode.
+    """
     plt.ion()
     best_reward = 0
-    agent = DQN_Agent(env, policy_net, target_net, **hyperparameters)
+    agent = DQN_Agent(env, policy_net, target_net, hyperparameters=hyperparameters)
     for i_episode in range(num_episodes):
         # Initialize the environment and get its state
         state, info = env.reset()
@@ -227,3 +248,5 @@ def train(policy_net, target_net, env:PendulumEnv, num_episodes:int=5000, **hype
     
     torch.save(policy_net.state_dict(), f"saved_policies/final_policy_net_DQN.pth")
     torch.save(target_net.state_dict(), f"saved_policies/final_target_net_DQN.pth")
+    
+    return agent.episode_rewards

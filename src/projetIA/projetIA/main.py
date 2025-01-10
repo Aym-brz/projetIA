@@ -20,17 +20,33 @@ else:
 def main():
     double_pendulum = False
     starting_up = False
-    # Hyperparamètres
-    num_episodes = 300
-    discount_factor = 0.95
-    learning_rate = 1e-3
-    max_iter = 800
-    num_sim_step = 5
-    stddev = 0.3
+    DQN = True
+    
     load_path = "best_trained_single_pendulum_policy.pth" # model to load to resume training
     save_path= "trained_single_pendulum_policy.pth" # path to save the model
-    batch_size = int(num_episodes/25)
-    DQN = True
+    num_episodes = 5000
+    # Hyperparamètres
+    hyperparameters = {
+        'BATCH_SIZE': 256,          # size of batches
+        'MAX_EPISODE_LENGTH': 800,  # maximum length of an episode
+        'GAMMA': 0.995,             # discount factor
+        'LR': 0.0003,               # learning rate
+        'MEM_SIZE': 20000,          # memory size
+    }
+    
+    if DQN:
+        hyperparameters.update({
+            'EPSILON_START': 0.9,  # initial value of epsilon
+            'EPSILON_END': 0.05,   # final value of epsilon
+            'EPSILON_DECAY': 80000,# decay rate of epsilon (in simulation steps)
+            'TAU': 0.005,          # soft update rate of target network
+        })
+    else:
+        hyperparameters.update({
+            'STDDEV_START': 0.3,         # standard deviation for sampling actions
+            'STDDEV_END': 0.05,          # final standard deviation
+        })
+
 
     # Initialisation de l'environnement
     rclpy.init()
@@ -65,7 +81,7 @@ def main():
             print('No policy found, training from scratch') 
 
     # Entraînement de la politique
-    total_rewards = train(policy, env, num_episodes=num_episodes, discount_factor=discount_factor, lr=learning_rate, max_iter=max_iter, num_sim_steps=num_sim_step, save_path=save_path, batch_size=batch_size, stddev=stddev)
+    total_rewards = train(policy, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
 
     # Affichage des résultats
     plt.plot(total_rewards)
@@ -83,7 +99,6 @@ def main():
     evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter, plot=True)
 
 
-    
 if __name__ == "__main__":
     main()
     #plt.ioff()

@@ -9,7 +9,7 @@ from pendulum_env import PendulumEnv
 
     
 class REINFORCEAgent:
-    def __init__(self, policy:FeedForwardNetwork, best:FeedForwardNetwork, discount_factor:int=0.99, lr:float=1e-3, memory_size:int=10000, stddev:int=20):
+    def __init__(self, policy:FeedForwardNetwork, best:FeedForwardNetwork, **hyperparameters):
         """ 
         Initialise l'agent REINFORCE.
 
@@ -18,14 +18,13 @@ class REINFORCEAgent:
         - lr (float): Taux d'apprentissage.
         - memory_size (int): Taille maximale de la mémoire.
         """
-        self.discount_factor = discount_factor
-        self.stddev = stddev
-        self.lr = lr
-        self.memory = deque(maxlen=memory_size)
+        self._init_hyperparameters(hyperparameters)
+        self.memory = deque(maxlen=self.MEM_SIZE)
         self.best = best
         self.policy_network = policy
-        self.optimizer = optim.Adam(self.policy_network.parameters(), lr=self.lr)
-
+        self.optimizer = optim.Adam(self.policy_network.parameters(), lr=self.LR)
+        self.total_rewards = []
+        
     def act(self, state):
         """
         Choisit une action en fonction de l'état actuel.
@@ -39,7 +38,7 @@ class REINFORCEAgent:
         """
         state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
         action = self.policy_network(state_tensor)
-        action_distribution = torch.distributions.Normal(action, torch.tensor(self.stddev))  # Écart-type = 10
+        action_distribution = torch.distributions.Normal(action, torch.tensor(self.STDDEV))  # Écart-type = 10
         sampled_action = action_distribution.sample()  # Obtenir une action
         log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
@@ -57,7 +56,7 @@ class REINFORCEAgent:
         """
         self.memory.append((state, sampled_action_episode, reward_episode, log_prob_episode))
     
-    def update(self, best:Policy, batch_size:int=25):
+    def update(self, best:FeedForwardNetwork, batch_size:int=25):
         num_batches = len(self.memory) // batch_size
         #print(self.memory[:][2])
         for i in range(num_batches):
@@ -86,7 +85,7 @@ class REINFORCEAgent:
             discounted_sum = 0
             # Compute discounted returns
             for reward in reversed(rewards):
-                discounted_sum = reward + self.discount_factor * discounted_sum
+                discounted_sum = reward + self.GAMMA * discounted_sum
                 returns.append(discounted_sum)
             returns.reverse()
             returns = torch.tensor(returns, dtype=torch.float32)
@@ -103,47 +102,74 @@ class REINFORCEAgent:
         self.optimizer.zero_grad()
         total_policy_loss.backward()
         self.optimizer.step()
-
-plt.ion()
-
-def plot_reward(total_rewards, show_result=False):
-    plt.figure(2)
-    durations_t = torch.tensor(total_rewards, dtype=torch.float)
-    if show_result:
-        plt.title('Result')
-    else:
-        plt.clf()
-        plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Reward')
-    plt.plot(durations_t.numpy())
-    # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
-        means = torch.cat((torch.zeros(99), means))
-        plt.plot(means.numpy())
-
-    plt.pause(0.001) 
-
-def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, discount_factor:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25, stddev:int=20):
-    """
-    Entraîne le modèle Policy pour stabiliser un double pendule.
     
-    Arguments :
-    - policy : une instance de la classe Policy (le réseau de neurones).
-    - env : une instance de l'environnement (comme PendulumEnv).
-    - num_episodes : nombre total d'épisodes d'entraînement.
-    - discount_factor : facteur d'actualisation pour les récompenses futures.
-    - lr : taux d'apprentissage pour l'optimiseur.
-    - max_iter : nombre maximum d'iterations par episode.
-    - save_path : chemin vers le fichier de sauvegarde de la politique.
-    
-    Retourne :
-    - total_rewards : une liste contenant les récompenses totales pour chaque épisode.
-    """
-    agent = REINFORCEAgent(policy=policy, best=policy, discount_factor=discount_factor, lr=lr, stddev=stddev)
-    total_rewards = [] 
+    def _init_hyperparameters(self, hyperparameters):
+        """
+            Initialize default and custom values for hyperparameters
 
+            Parameters:
+                hyperparameters - the extra arguments included when creating the PPO model, should only include
+                                    hyperparameters defined below with custom values.
+
+            Return:
+                None
+        """
+        # Initialize default values for hyperparameters
+        # Algorithm hyperparameters
+        self.BATCH_SIZE = 25
+        self.GAMMA = 0.995
+        self.LR = 0.0003
+        self.MEM_SIZE = 10000
+        self.MAX_EPISODE_LENGTH = 800
+        self.STDDEV_START = 0.3
+        self.STDDEV_END = 0.05
+        self.STDDEV_DECAY = 500
+        
+        # Change any default values to custom values for specified hyperparameters
+        for param, val in hyperparameters.items():
+            exec('self.' + param + ' = ' + str(val))
+
+    def plot_reward(self, show_result=False):
+        plt.figure(2)
+        durations_t = torch.tensor(self.total_rewards, dtype=torch.float)
+        if show_result:
+            plt.title('Result')
+        else:
+            plt.clf()
+            plt.title('Training...')
+        plt.xlabel('Episode')
+        plt.ylabel('Reward')
+        plt.plot(durations_t.numpy())
+        # Take 100 episode averages and plot them too
+        if len(durations_t) >= 100:
+            means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+            means = torch.cat((torch.zeros(99), means))
+            plt.plot(means.numpy())
+
+def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, save_path:str="trained_policy.pth", **hyperparameters):
+
+    """
+    Trains the Policy model to stabilize the pendulum.
+    
+    Arguments:
+    - policy: an instance of the Policy class (the neural network).
+    - env: an instance of the environment (such as PendulumEnv).
+    - num_episodes: total number of training episodes.
+    - save_path: path to the policy save file.
+    - hyperparameters: dictionary containing the following hyperparameters:
+        - BATCH_SIZE: batch size.
+        - MAX_EPISODE_LENGTH: maximum length of an episode.
+        - GAMMA: discount factor.
+        - LR: learning rate.
+        - MEM_SIZE: memory size.
+        - STDDEV_START: initial standard deviation for action sampling.
+        - STDDEV_END: final standard deviation (exponential decay over the training).
+    Returns:
+    - total_rewards: a list containing the total rewards for each episode.
+    """
+    plt.ion()
+    agent = REINFORCEAgent(policy=policy, best=policy, hyperparameters=hyperparameters)
+    best_reward = -np.inf
     for episode in range(num_episodes):
         # Réinitialisation de l'environnement
         state, _ = env.reset()  # État initial (vecteur de taille 6)
@@ -152,8 +178,7 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, dis
         
         done = False
         iter = 0
-        best_reward = -np.inf
-        while not done and iter < max_iter:
+        while not done and iter < agent.MAX_EPISODE_LENGTH:
             sampled_action, log_prob = agent.act(state)
 
             # Appliquer l'action à l'environnement
@@ -168,18 +193,19 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, dis
             state = next_state
         # Calcul de la récompense totale pour l'épisode
         total_episode_reward = sum(episode_rewards)
-        total_rewards.append(total_episode_reward)
+        agent.total_rewards.append(total_episode_reward)
         if total_episode_reward > best_reward:
             torch.save(policy.state_dict(), "best_"+save_path)
             agent.best = policy
 
         agent.remember(state, sampled_action, episode_rewards, episode_log_probs)
-        plot_reward(total_rewards=total_rewards)
+        agent.plot_reward()
 
-        if len(agent.memory) >= batch_size:
-            for i in range(int(len(agent.memory)//batch_size)):
-                    agent.update(agent.best, batch_size)
-            agent.stddev = agent.stddev*0.98
+        if len(agent.memory) >= agent.BATCH_SIZE:
+            for i in range(int(len(agent.memory)//agent.BATCH_SIZE)):
+                    agent.update(agent.best, agent.BATCH_SIZE)
+            agent.STDDEV = agent.STDDEV_END + (agent.STDDEV_START - agent.STDDEV_END) * \
+            np.exp(-1. * episode/(num_episodes/5))
         
         # Afficher le résultat périodiquement
         print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
@@ -191,9 +217,9 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, dis
     print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")  
     print('Complete')
     
-    plot_reward(show_result=True)
+    agent.plot_reward(show_result=True)
     plt.savefig("plot_results\reinforce_training.png")
     plt.ioff()
     plt.show()
-    return total_rewards
+    return agent.total_rewards
 
