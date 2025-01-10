@@ -1,9 +1,12 @@
+import matplotlib
+import matplotlib.pyplot as plt 
 import torch
 import torch.optim as optim
 from collections import deque
 import numpy as np
 from network import Policy
 from pendulum_env import PendulumEnv
+
     
 class REINFORCEAgent:
     def __init__(self, policy:Policy, best:Policy, discount_factor:int=0.99, lr:float=1e-3, memory_size:int=10000, stddev:int=20):
@@ -101,6 +104,26 @@ class REINFORCEAgent:
         total_policy_loss.backward()
         self.optimizer.step()
 
+plt.ion()
+
+def plot_reward(total_rewards, show_result=False):
+    plt.figure(2)
+    durations_t = torch.tensor(total_rewards, dtype=torch.float)
+    if show_result:
+        plt.title('Result')
+    else:
+        plt.clf()
+        plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
+
+    plt.pause(0.001) 
 
 def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor:float=0.99, lr:float=1e-3, max_iter:int=1000, num_sim_steps:int=1, save_path:str="trained_policy.pth", batch_size:int=25, stddev:int=20):
     """
@@ -151,6 +174,7 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
             agent.best = policy
 
         agent.remember(state, sampled_action, episode_rewards, episode_log_probs)
+        plot_reward(total_rewards=total_rewards)
 
         if len(agent.memory) >= batch_size:
             for i in range(int(len(agent.memory)//batch_size)):
@@ -164,6 +188,12 @@ def train(policy:Policy, env:PendulumEnv, num_episodes:int=1000, discount_factor
 
     # Sauvegarde finale du modèle
     torch.save(policy.state_dict(), 'final_' + save_path)
-    print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")
+    print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")  
+    print('Complete')
     
+    plot_reward(show_result=True)
+    plt.savefig("plot_results\reinforce_training.png")
+    plt.ioff()
+    plt.show()
     return total_rewards
+
