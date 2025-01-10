@@ -7,7 +7,7 @@ from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 import time
 
-max_speed = 4.5
+max_speed = 15.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True, starting_up: bool = False, DQN: bool = False):
@@ -28,7 +28,7 @@ class PendulumEnv(gym.Env, Node):
         self.state = self.joint_state_sub.get_state()
 
     def map_action_to_speed(self, action):
-        return np.linspace(-max_speed, max_speed, self.discretizition)[action]
+        return np.linspace(-1, 1, self.discretizition)[action]
    
     def compute_reward(self):
         state = self.state
@@ -45,7 +45,7 @@ class PendulumEnv(gym.Env, Node):
         """
         Execute one step in the environment with the given action.
         Args:
-            action (numpy.ndarray): The action to be taken, which is a numpy array with a single float value.
+            action (numpy.ndarray): The action to be taken, which is a numpy array with a single float value between -1 and 1 if not DQN.
         Returns:
             tuple: A tuple containing:
                 - state (numpy.ndarray): The new state of the environment after taking the action.
@@ -89,12 +89,16 @@ class PendulumEnv(gym.Env, Node):
 
 def main():
     rclpy.init()
-    env = PendulumEnv()
+    double_pendulum = False
+    starting_up = False
+    DQN = False
+
+    env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up, DQN=DQN)
     for i in range(3):
         state = env.reset()
         time.sleep(5)
         for i in range(10):
-            env.step(-5, 100)
+            env.step(1, 5)
             time.sleep(1)
 
 

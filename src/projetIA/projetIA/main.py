@@ -51,7 +51,7 @@ def main():
             'LR': 0.001,                 # learning rate
             'MEM_SIZE': 10000,           # memory size
             'BATCH_SIZE': 15,            # size of batches (in episodes)
-            'STDDEV_START': 0.3,         # standard deviation for sampling actions
+            'STDDEV_START': 0.6,         # standard deviation for sampling actions
             'STDDEV_END': 0.05,          # final standard deviation
         })
 
