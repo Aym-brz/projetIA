@@ -230,13 +230,19 @@ projectroot
 The pendulum starts on the stable low position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations.
 ## Reward Function
 
-The reward is calculated as (old version):
+Example 1:
 - **Positive Terms**:
   - Maintaining angles near the upright position for both pendulum links.
   - Maintaining position near the center for the trolley.
 - **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
 
-The reward is calculated as (new version):
+Example 2:
+- **Negative Terms**:
+  - Angles far the upright position for both pendulum links.
+  - Position far the center for the trolley.
+- **Penalty for Failures**: Simulation done after faileurs + penalty if the trolley reach the border.
+
+Example 3:
 - **Stability Terms**:
   - Instability compute as Maintaining angles near the upright position for both pendulum links and Maintaining position near the center for the trolley.
   - Stability as the exponential of the negative instability: the stability will increase the reward function if it is near the goal, and decrease the reward funtion if it is away from the goal.
