@@ -1,3 +1,13 @@
+"""
+This module defines a ROS2 node for controlling the Gazebo simulation world.
+Classes:
+    GazeboControlClient: A client node to interact with the Gazebo world control service.
+Functions:
+    main(args=None): Initializes the ROS2 node and demonstrates a sequence of control requests.
+Usage:
+    Run this module as a script to start the GazeboControlClient node and execute a sequence of control requests.
+    Import this module to use the node in another script.
+"""
 import rclpy
 from rclpy.node import Node
 import time

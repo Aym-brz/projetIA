@@ -1,3 +1,14 @@
+"""
+This module defines a ROS2 node for subscribing to the '/joint_states' topic and processing joint state messages.
+The state of the joints and trolley can be accessed and reset.
+Classes:
+    StateSubscriber: A ROS2 node that subscribes to the '/joint_states' topic and processes joint state messages.
+Functions:
+    main(): Initializes the ROS2 node and prints the state of the joints and trolley at regular intervals.
+Usage:
+    Run this module as a script to start the StateSubscriber node and print the state of the joints and trolley.
+    Import this module to use the node in another script.
+"""
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -9,15 +20,13 @@ class StateSubscriber(Node):
     A ROS2 node that subscribes to the '/joint_states' topic and processes joint state messages.
     Attributes:
         joint_state_sub (Subscription): The subscription to the '/joint_states' topic.
-        state (numpy.ndarray): A 1D array of size 6 that holds the state of the joints and trolley.
-            [upper joint position, upper joint velocity, lower joint position, lower joint velocity, trolley position, trolley velocity]
-            [°, °/s, °, °/s, m, m/s]
-        done (bool): A flag indicating whether the processing is done.
+        state (numpy.ndarray): A 1D array that holds the state of the joints and trolley.
+            for double pendulum, state contains [cos(theta1), sin(theta1), theta1_dot, cos(theta2), sin(theta2), theta2_dot, x, x_dot]
+            for single pendulum, state contains [cos(theta), sin(theta), theta_dot, x, x_dot]
     Methods:
         __init__(): Initializes the StateSubscriber node and sets up the subscription.
         joint_state_callback(msg): Callback function that processes incoming joint state messages.
         reset(): Resets the state to an array of zeros and returns the state.
-        __print__(): Prints the current state.
     """
     
     def __init__(self, double_pendulum: bool = True, starting_up = False):
@@ -33,15 +42,10 @@ class StateSubscriber(Node):
         
     def joint_state_callback(self, msg):
         if self.double_pendulum : # double pendulum case
-            # self.state[:] = [   msg.position[0] % (2*np.pi) * 180/np.pi, msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
-            #                     msg.position[1] % (2*np.pi) * 180/np.pi, msg.velocity[1]*180/np.pi,  # lower joint position and velocity [° and °/s]
-            #                     msg.position[2],                         msg.velocity[2]]            # trolley position and velocity
             self.state[:] = [np.cos(msg.position[0]), np.sin(msg.position[0]), msg.velocity[0], 
                              np.cos(msg.position[1]), np.sin(msg.position[1]), msg.velocity[1], 
                              msg.position[2], msg.velocity[2]]
         else:   # single pendulum state
-            # self.state[:] = [(msg.position[0] + np.pi if self.starting_up else msg.position[0])% (2*np.pi) * 180/np.pi,   msg.velocity[0]*180/np.pi,  # upper joints position and velocity [° and °/s]
-            #                  msg.position[1],                           msg.velocity[1]]  # trolley position and velocity
             self.state[:] = [np.cos(msg.position[0]), np.sin(msg.position[0]), msg.velocity[0], 
                              msg.position[1], msg.velocity[1]]
         

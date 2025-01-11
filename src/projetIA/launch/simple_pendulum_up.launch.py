@@ -1,3 +1,18 @@
+"""
+Launch file for the simple pendulum (starting from upwards) simulation using Gazebo and ROS 2
+This launch file sets up the necessary nodes and processes to run the double pendulum simulation in Gazebo,
+including the Gazebo server, ROS-Gazebo bridge, and custom nodes for controlling the simulation and publishing speed.
+Functions:
+    generate_launch_description(): Generates and returns the launch description for the simulation.
+Nodes:
+    gazebo_controller_node: Node for controlling the Gazebo world.
+    speed_publisher_node: Node for publishing speed information.
+Processes:
+    gazebo_server: Process to start the Gazebo server with the specified SDF model.
+    ros_gz_bridge: Bridge between ROS 2 and Gazebo using the specified configuration file.
+Usage:
+    This launch file can be executed using the ROS 2 launch command.
+"""
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import ExecuteProcess

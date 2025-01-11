@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 from collections import deque
 import random
-import matplotlib
+import numpy as np
 import matplotlib.pyplot as plt 
 from network import FeedForwardNetwork
 from pendulum_env import PendulumEnv
@@ -18,7 +18,7 @@ class REINFORCEAgent:
         - memory_size (int): Taille maximale de la mémoire.
         """
         self._init_hyperparameters(hyperparameters)
-        self.memory = deque(maxlen=self.MEM_SIZEe)
+        self.memory = deque(maxlen=self.MEM_SIZE)
         self.policy_network = policy
         self.optimizer = optim.Adam(self.policy_network.parameters(), lr=self.LR)
         self.total_rewards = []
@@ -126,7 +126,7 @@ class REINFORCEAgent:
         self.MAX_EPISODE_LENGTH = 800
         self.STDDEV_START = 0.3
         self.STDDEV_END = 0.05
-        self.STDDEV_DECAY = 500
+        self.STDDEV = self.STDDEV_START
         self.NUM_SIM_STEPS = 5
 
         # Change any default values to custom values for specified hyperparameters
@@ -176,6 +176,7 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
     """
     plt.ion()
     agent = REINFORCEAgent(policy=policy, hyperparameters=hyperparameters)
+    best_reward = 0
     for episode in range(num_episodes):
         state, _ = env.reset()
         episode_memory = []
@@ -191,7 +192,12 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
             iter += 1
         agent.total_rewards.append(episode_reward)
         agent.plot_reward()
-        
+        if episode_reward > best_reward:
+            torch.save(policy.state_dict(), f"{save_path}/best_policy_REINFORCE2_{best_reward}.pth")
+            best_reward = episode_reward
+
+        agent.STDDEV = agent.STDDEV_END + (agent.STDDEV_START - agent.STDDEV_END) * np.exp(-1. * episode/(num_episodes/5))
+
         # Calculer les retours actualisés pour l'épisode
         discounted_sum = 0
         for i in reversed(range(len(episode_memory))):
@@ -203,7 +209,7 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
         if len(agent.memory) >= agent.BATCH_SIZE:
             agent.update(agent.BATCH_SIZE)
 
-        print(f"Épisode {episode + 1}/{num_episodes}, Récompense : {episode_reward}")
+        # print(f"Épisode {episode + 1}/{num_episodes}, Récompense : {episode_reward}")
         if (episode + 1) % 10 == 0:
             torch.save(policy.state_dict(), f"{save_path}/policy_REINFORCE2_{episode +1}.pth")
 

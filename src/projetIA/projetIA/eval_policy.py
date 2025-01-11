@@ -22,7 +22,7 @@ def evaluate_policy(policy: FeedForwardNetwork|DQN_NN, env: PendulumEnv, num_epi
     total_rewards = []
 
     for episode in range(num_episodes):
-        state = env.reset()
+        state, _ = env.reset()
         episode_rewards = []
         done = False
         iter = 0
@@ -31,7 +31,9 @@ def evaluate_policy(policy: FeedForwardNetwork|DQN_NN, env: PendulumEnv, num_epi
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
             with torch.no_grad():
                 action = policy(state_tensor)
-            next_state, reward, done, _ , _ = env.step(action.item(), num_sim_steps=num_sim_step)
+            if isinstance(policy, DQN_NN):
+                action = action.max(1).indices.view(1, 1)
+            next_state, reward, done, _ , _ = env.step(action, num_sim_steps=num_sim_step)
             episode_rewards.append(reward)
             state = next_state
             iter += 1
@@ -54,22 +56,22 @@ def main():
     double_pendulum = False
     starting_up = False
     max_iter = 3000
-    is_DQN = False
+    is_DQN = True
     
 
     # Initialisation de l'environnement
     env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up, DQN=is_DQN)
 
-    save_path="final_trained_single_pendulum_policy.pth"
+    save_path="saved_policies/DQN/starting_down/policy_DQN_2940.pth"
     # Charger le modèle sauvegardé
     if is_DQN:
-        policy = DQN(env.observation_space.shape[0], env.action_space.shape[0])
+        policy = DQN_NN(env.observation_space.shape[0], env.action_space.n)
     else:
         policy = FeedForwardNetwork(double_pendulum=double_pendulum)  # Créer une nouvelle instance de Policy
     
     policy.load_state_dict(torch.load(save_path))  # Charger les poids
     # Évaluation de la politique entraînée
-    evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter, plot=True)
+    evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter, num_sim_step=5, plot=True)
     
 if __name__ == "__main__":
     main()

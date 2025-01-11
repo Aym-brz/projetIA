@@ -1,3 +1,16 @@
+
+"""
+This module defines a custom OpenAI Gym environment for controlling a pendulum in a Gazebo simulation.
+The environment is compatible with both single and double pendulum setups and can be used with 
+Deep Q-Network (DQN) or continuous action spaces.
+Classes:
+    PendulumEnv: A custom Gym environment for controlling a pendulum in a Gazebo simulation.
+Functions:
+    main(): Initializes the ROS2 node and demonstrates a sequence of control requests.
+Usage:
+    Run this module as a script to start the PendulumEnv environment and execute a sequence of control requests.
+    Import this module to use the environment in another script.
+"""
 import gym
 import numpy as np
 import rclpy
@@ -7,7 +20,7 @@ from speed_publisher import SpeedPublisher
 from state_subscriber import StateSubscriber
 import time
 
-max_speed = 15.0
+max_speed = 20.0
 
 class PendulumEnv(gym.Env, Node):
     def __init__(self, double_pendulum: bool = True, starting_up: bool = False, DQN: bool = False):
@@ -51,6 +64,7 @@ class PendulumEnv(gym.Env, Node):
                 - state (numpy.ndarray): The new state of the environment after taking the action.
                 - reward (float): The reward received after taking the action.
                 - done (bool): A boolean indicating whether the episode has ended.
+                - done (bool): Provided for compatibility with OpenAI Gym's API
                 - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
         # Set the speed of the trolley
@@ -77,13 +91,13 @@ class PendulumEnv(gym.Env, Node):
         """
         Reset the simulation to its initial state.
         Returns:
-            numpy.ndarray: The initial state of the environment after the reset.
+            - numpy.ndarray: The initial state of the environment after the reset.
+            - info (dict): An empty dictionary, provided for compatibility with OpenAI Gym's API.
         """
         # Reset the simulation
         self.speed_publisher_node.set_speed(0)
         self.gazebo_control_client.send_control_request(pause=False, reset=True)
         state = self.joint_state_sub.get_state()
-        # Reset the state
         self.done = False
         return state, {}
 

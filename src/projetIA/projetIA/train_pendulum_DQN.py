@@ -230,17 +230,17 @@ def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:
             if done:
                 agent.episode_durations.append(t + 1)
                 agent.episode_rewards.append(total_episode_reward)
-                if reward > best_reward:
-                    best_reward = reward
-                    torch.save(policy_net.state_dict(), f"{save_path}/best_policy_DQN_{best_reward}.pth")
-                    torch.save(target_net.state_dict(), f"{save_path}/best_target_DQN_{best_reward}.pth")
-                # agent.plot_durations()
                 agent.plot_reward()
                 break
-        # Save the model every 100 episodes
+        # Save the model if best
+        if total_episode_reward > best_reward:
+            best_reward = total_episode_reward
+            torch.save(policy_net.state_dict(), f"{save_path}/best_policy_DQN_{best_reward:.2f}.pth")
+            torch.save(target_net.state_dict(), f"{save_path}/best_target_DQN_{best_reward:.2f}.pth")
+        # Save the model every 10 episodes
         if i_episode % 10 == 0:
-            torch.save(policy_net.state_dict(), f"{save_path}/policy_DQN_{i_episode}.pth")
-            torch.save(target_net.state_dict(), f"{save_path}/target_DQN_{i_episode}.pth")
+            torch.save(policy_net.state_dict(), f"{save_path}/policy_DQN_{i_episode}_{total_episode_reward:.2f}.pth")
+            torch.save(target_net.state_dict(), f"{save_path}/target_DQN_{i_episode}_{total_episode_reward:.2f}.pth")
     print('Complete')
     agent.plot_reward(show_result=True)
     plt.savefig(f"{save_path}/DQN_training.png")

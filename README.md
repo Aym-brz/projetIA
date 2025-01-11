@@ -46,11 +46,9 @@ Fix the bridge for the world control service
    parameter_bridge <service@ROS2_srv_type[@Ign_req_type@Ign_rep_type]> 
    ```
 
-fait par github copilot et pas encore testé : pendulum_env et train_pendulum
-
 # Double Pendulum on Rail Simulation
 
-This project aims to simulate and train a double pendulum on a rail to balance itself in an inverted position using reinforcement learning. The simulation is implemented in Gazebo and Pytorch, with ROS 2 serving as the middleware interface.
+This project aims to simulate and train a single/double pendulum on a rail to balance itself in an inverted position using reinforcement learning. The simulation is implemented in Gazebo and Pytorch, with ROS 2 serving as the middleware interface.
 
 ## Features
 
@@ -168,29 +166,33 @@ pip install -r requirements.txt
 
 ```plaintext
 projectroot
-├── src/
+├── src/projetIA
 │   ├── config/                        # Contains configuration files
-│   │   └── bridge_config.yaml      
+│   │   └── bridge_config.yaml            # Bridge configuration between Gazebo and ROS topics
 │   ├── models/                        # Contains SDF models
-│   │   └── double_pendulum_rail.sdf      # Description of the robot (geometry, joints, aspect, environment)
-│   │   └── default_world.sdf             # Default empty environment
-│   ├── launch/                        # Contains launch files for the simulation
-│   │   └── pendulum.launch.py      
+│   │   └── default_world.sdf             # Empty environment
+│   │   └── double_pendulum_rail.sdf      # Description of the double pendulum
+│   │   └── simple_pendulum_rail.sdf      # Description of the single pendulum
+│   │   └── simple_pendulum_up_rail.sdf   # Single pendulum initialized from up
+│   ├── launch/                        # Contains launch files for simulations and the ros-gz bridge
+│   │   └── pendulum.launch.py            # launch the double pendulum 
+│   │   └── simple_pendulum_up.launch.py  # launch the simple pendulum upwards
+│   │   └── simple_pendulum.launch.py     # launch the simple pendulum 
+│   │   └── test_pendulum.launch.py       # launch the double pendulum and test the different nodes.
 │   ├── projetIA/                      # Python library for the project
-│   │   └── eval_policy.py                # Evaluate the best policy obtain after the training
+│   │   └── eval_policy.py                # Evaluate the a policy obtain
 │   │   └── main.py                       # Launch the training and the evaluation
-│   │   └── network.py                    # Class of the network policy
+│   │   └── network.py                    # Structure of the neural networks
 │   │   └── state_subscriber.py           # ROS node to read the speeds and positions
 │   │   └── speed_publisher.py            # ROS node to publish the speed of the trolley
 │   │   └── pendulum_env.py               # Training environment, containing the reward function
-│   │   └── train_pendulum.py             # Training script
-│   │   └── train_pendulum_reinforce.py   # Training script test (other version of the implementation but no better results)
+│   │   └── train_pendulum.py             # Training script (not working, implementation of reinforce)
+│   │   └── train_pendulum_reinforce.py   # Training script
 │   │   └── world_control.py              # ROS node to start, pause and reset the simulation
-│   ├── README.md                      # Documentation
 │   ├── setup.py                       # Setup script for the ROS 2 package
 │   └── package.xml                    # ROS 2 package metadata
-├── README.md
-└── requirements.txt
+├── README.md                          # Documentation
+└── requirements.txt                   # Python requirements
 
 ```
 
@@ -234,17 +236,17 @@ Example 1:
 - **Positive Terms**:
   - Maintaining angles near the upright position for both pendulum links.
   - Maintaining position near the center for the trolley.
-- **No Penalty for Failures**: The pendulum resets in random positions after each training episode.
+- **No Penalty for Failures**: The pendulum resets at the stable low position after each training episode.
 
 Example 2:
 - **Negative Terms**:
   - Angles far the upright position for both pendulum links.
   - Position far the center for the trolley.
-- **Penalty for Failures**: Simulation done after faileurs + penalty if the trolley reach the border.
+- **Penalty for Failures**: Simulation reset after failure + penalty if the trolley reach the border.
 
 Example 3:
 - **Stability Terms**:
-  - Instability compute as Maintaining angles near the upright position for both pendulum links and Maintaining position near the center for the trolley.
+  - Instability compute as Maintaining angles near the upright position and Maintaining position near the center for the trolley.
   - Stability as the exponential of the negative instability: the stability will increase the reward function if it is near the goal, and decrease the reward funtion if it is away from the goal.
 - **Force punishment**: Derivative of the speed, this will dismunish the reward function if there is too much variation in the speed.
 

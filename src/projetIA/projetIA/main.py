@@ -8,8 +8,8 @@ from eval_policy import evaluate_policy
 import os
 
 # choose the training method : 
-DQN = False
-first_method = True
+DQN = True
+first_method = False
 
 if DQN:
     from train_pendulum_DQN import train
@@ -23,11 +23,11 @@ def main():
     starting_up = False
     
     load_path = "best_trained_single_pendulum_policy.pth" # model to load to resume training
-    save_path= "saved_policies/reinforce" # path to save the models
+    save_path= f"saved_policies/DQN/starting_down" # path to save the models
     if not os.path.exists(save_path):
         os.makedirs(save_path)
         
-    num_episodes = 3000 # number of training episodes
+    num_episodes = 10000 # number of training episodes
     # Hyperparamètres
     hyperparameters = {
         'MAX_EPISODE_LENGTH': 800,  # maximum length of an episode
@@ -39,7 +39,7 @@ def main():
             'GAMMA': 0.995,             # discount factor
             'LR': 0.0003,               # learning rate
             'MEM_SIZE': 20000,          # memory size
-            'BATCH_SIZE': 256,          # size of batches (in steps)
+            'BATCH_SIZE': 512,          # size of batches (in steps)
             'EPSILON_START': 0.9,       # initial value of epsilon
             'EPSILON_END': 0.05,        # final value of epsilon
             'EPSILON_DECAY': 80000,     # decay rate of epsilon (in simulation steps)
@@ -51,8 +51,8 @@ def main():
             'LR': 0.001,                 # learning rate
             'MEM_SIZE': 10000,           # memory size
             'BATCH_SIZE': 15,            # size of batches (in episodes)
-            'STDDEV_START': 0.6,         # standard deviation for sampling actions
-            'STDDEV_END': 0.05,          # final standard deviation
+            'STDDEV_START': 1.0,         # standard deviation for sampling actions
+            'STDDEV_END': 0.2,          # final standard deviation
         })
 
 
@@ -73,8 +73,8 @@ def main():
         policy_net = DQN_NN(state_dim, action_dim)
         target_net = DQN_NN(state_dim, action_dim)
         try:
-            policy_net.load_state_dict(torch.load("saved_policies/best_policy_net_DQN.pth"))
-            target_net.load_state_dict(torch.load("saved_policies/best_target_net_DQN.pth"))
+            policy_net.load_state_dict(torch.load("saved_policies/DQN speed 4.5 timesteps 1/best_policy_net_DQN.pth"))
+            target_net.load_state_dict(torch.load("saved_policies/DQN speed 4.5 timesteps 1/best_target_net_DQN.pth"))
             print("Loaded saved best policies.")
         except FileNotFoundError:
             try:

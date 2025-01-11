@@ -1,10 +1,17 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""
+This module defines a ROS2 node for controlling the speed of the trolley in the Gazebo simulation
+by publishing on the /trolley_speed_cmd topic.
+The speed can be dynamically changed by calling the set_speed method. 
 
+Classes:
+    SpeedPublisher: A ROS2 node that publishes the speed of the trolley.
+Functions:
+    main(args=None): Initializes the ROS2 node and demonstrates a sequence of control requests.
+Usage:
+    Run this module as a script to start the SpeedPublisher node and set a sequence of speedss.
+    Import this module to use the node in another script.
 """
-To change the speed during the simulation, call the set_speed service:
-ros2 service call /set_speed std_srvs/srv/SetFloat "{data: 1.5}"
-"""
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64

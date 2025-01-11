@@ -73,14 +73,17 @@ nvidia-cusparse-cu12==12.3.1.170
 nvidia-nccl-cu12==2.21.5
 nvidia-nvjitlink-cu12==12.4.127
 nvidia-nvtx-cu12==12.4.127
+orjson==3.10.13
 osrf-pycommon==2.1.5
 packaging==24.2
+pandas==2.2.3
 pcl-msgs==1.0.0
 pendulum-msgs==0.33.5
 pillow==11.1.0
 pyparsing==3.2.1
 python-dateutil==2.9.0.post0
 python-qt-binding==2.2.1
+pytz==2024.2
 PyYAML==6.0.2
 qt-dotgraph==2.7.5
 qt-gui==2.7.5
@@ -162,6 +165,7 @@ std-srvs==5.3.5
 stereo-msgs==5.3.5
 sympy==1.13.1
 teleop-twist-keyboard==2.4.0
+tensordict==0.6.2
 tf2-geometry-msgs==0.36.7
 tf2-kdl==0.36.7
 tf2-msgs==0.36.7
@@ -177,6 +181,7 @@ triton==3.1.0
 turtlesim==1.8.3
 type-description-interfaces==2.0.2
 typing_extensions==4.12.2
+tzdata==2024.2
 unique-identifier-msgs==2.5.0
 vision-msgs==4.1.1
 visualization-msgs==5.3.5

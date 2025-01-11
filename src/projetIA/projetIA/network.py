@@ -3,8 +3,6 @@ import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 
-
-#plt.ion()
 class FeedForwardNetwork(nn.Module):
     def __init__(self, double_pendulum:bool=True):
         """
@@ -25,7 +23,7 @@ class FeedForwardNetwork(nn.Module):
             )
 
     def forward(self, x):
-        return self.network(x)  # scale to action space
+        return self.network(x) 
     
 
 class DQN_NN(nn.Module):
@@ -34,8 +32,7 @@ class DQN_NN(nn.Module):
         self.layer1 = nn.Linear(n_observations, 128)
         self.layer2 = nn.Linear(128, 128)
         self.layer3 = nn.Linear(128, n_actions)
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+        
     def forward(self, x):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))

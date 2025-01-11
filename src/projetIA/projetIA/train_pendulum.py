@@ -1,4 +1,11 @@
-import matplotlib
+"""
+This module contains an attempt to implement the REINFORCE algorithm for training a policy network to stabilize a pendulum.
+Note: This implementation is not used as it is not working. Another implementation replaced it.
+Classes:
+    REINFORCEAgent: An agent that uses the REINFORCE algorithm to learn a policy for the pendulum environment.
+Functions:
+    train: Trains the policy model to stabilize the pendulum using the REINFORCE algorithm.
+"""
 import matplotlib.pyplot as plt 
 import torch
 import torch.optim as optim
@@ -38,7 +45,7 @@ class REINFORCEAgent:
         """
         state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
         action = self.policy_network(state_tensor)
-        action_distribution = torch.distributions.Normal(action, torch.tensor(self.STDDEV))  # Écart-type = 10
+        action_distribution = torch.distributions.Normal(action, torch.tensor(self.STDDEV))
         sampled_action = action_distribution.sample()  # Obtenir une action
         log_prob = action_distribution.log_prob(sampled_action)  # Log-probabilité de l'action
             
@@ -203,12 +210,11 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
 
         agent.remember(state, sampled_action, episode_rewards, episode_log_probs)
         agent.plot_reward()
+        agent.STDDEV = agent.STDDEV_END + (agent.STDDEV_START - agent.STDDEV_END) * np.exp(-1. * episode/(num_episodes/5))
 
         if len(agent.memory) >= agent.BATCH_SIZE:
             for i in range(int(len(agent.memory)//agent.BATCH_SIZE)):
                     agent.update(agent.best, agent.BATCH_SIZE)
-            agent.STDDEV = agent.STDDEV_END + (agent.STDDEV_START - agent.STDDEV_END) * \
-            np.exp(-1. * episode/(num_episodes/5))
         
         # print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
         # Afficher le résultat périodiquement
