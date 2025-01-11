@@ -243,8 +243,18 @@ The reward is calculated as (new version):
 - **Force punishment**: Derivative of the speed, this will dismunish the reward function if there is too much variation in the speed.
 
 
-## TODO
-- Write the script for the training
-   - Fix the RL algoritm (also inlcude a way to save the progression !)
-   - change the launch file to include the training
-   - Train the model
+## Improvement
+- Run with GPU for longer training
+- DDPG implementation
+
+## Comment
+- Better to have a graphic card to run the code. With CPU - intel i7 - 8650U, DQN training last for 10h
+
+
+## Sources and inspirations
+- RL definition: https://www.ibm.com/think/topics/reinforcement-learning
+- RL: https://www.sciencedirect.com/science/article/abs/pii/S0952197623017025
+- PPO: https://github.com/ericyangyu/PPO-for-Beginners 
+- DQN: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0280071 
+- Reinforce (and DDQP + DQN) : https://github.com/fredrikmagnus/RL-for-Inverted-Pendulum
+- DDPG : https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/rl/ipynb/ddpg_pendulum.ipynb , https://github.com/openai/spinningup/blob/master/docs/algorithms/ddpg.rst
