@@ -85,6 +85,10 @@ class PendulumEnv(gym.Env, Node):
         if abs(self.state[2]) >= 20: # done if angular velocity is too high
             print("Angular velocity too high")
             self.done = True
+        
+        if self.double_pendulum and abs(self.state[5]) >= 20:
+            print("Angular velocity too high")
+            self.done = True
         return self.state, reward, self.done, self.done, {}
         
     def reset(self):
