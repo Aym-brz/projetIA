@@ -33,7 +33,7 @@ class PendulumEnv(gym.Env, Node):
             self.action_space = gym.spaces.Discrete(self.discretizition)
         else:
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(1,))
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(7 if double_pendulum else 5,))
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(8 if double_pendulum else 5,))
         self.gazebo_control_client = GazeboControlClient()
         self.speed_publisher_node = SpeedPublisher()
         self.joint_state_sub = StateSubscriber(double_pendulum=double_pendulum, starting_up=starting_up)     

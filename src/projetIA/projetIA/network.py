@@ -8,11 +8,11 @@ class FeedForwardNetwork(nn.Module):
         """
         Initializes the policy network. This network takes the state of the pendulum as input and outputs the action to be taken.
 
-        The network is composed of two hidden layers of size 64 with ReLU activation, and an output layer of size 1 with Tanh activation.
+        The network is composed of three hidden layers of size 128 with Tanh activation, and an output layer of size 1 with Tanh activation.
         """
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(7 if double_pendulum else 5, 128),
+            nn.Linear(8 if double_pendulum else 5, 128),
             nn.Tanh(),
             nn.Linear(128, 128),
             nn.Tanh(),

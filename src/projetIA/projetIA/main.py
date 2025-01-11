@@ -9,21 +9,18 @@ import os
 
 # choose the training method : 
 DQN = True
-first_method = False
 
 if DQN:
     from train_pendulum_DQN import train
-elif first_method:
-    from train_pendulum import train
 else:
     from train_pendulum_reinforce import train
 
 def main():
-    double_pendulum = False
+    double_pendulum = True
     starting_up = False
     
     load_path = "best_trained_single_pendulum_policy.pth" # model to load to resume training
-    save_path= f"saved_policies/DQN/starting_down" # path to save the models
+    save_path= f"saved_policies/double_pendulum/DQN/starting_down" # path to save the models
     if not os.path.exists(save_path):
         os.makedirs(save_path)
         

@@ -198,34 +198,41 @@ projectroot
 
 ## Usage
 
-1. Launch the Gazebo simulation with ROS 2 bridge
+1. Launch the Gazebo simulation with ROS 2 bridge:
    ```bash
    ros2 launch projetIA pendulum.launch.py
    ```
-   This will launch the simulation, as well as the speed control and the world control nodes
-2. From another terminal, the speed and position of the joints can be retreived :
-   - Thanks to a Node subscribed to the right topics
-   ```bash
-   ros2 run projetIA state_subscriber
-   ```
-   - Manually 
-      - position and velocity of joints can be found on the ROS topic /joint_states:
-      ```bash
-      ros2 topic echo /joint_states
-      ```
-      - Position and rotation of parts can be found on the ROS topic /tf:
-      ```bash
-      ros2 topic echo /tf
-      ```
-3. the velocity of the trolley can be set by publishing a float to the topic /trolley_speed_cmd:
-   ```bash
-   ros2 topic pub /trolley_speed_cmd std_msgs/msg/Float64 "data: 4.0"
-   ```
+   This will launch the simulation, as well as the Gazebo - ROS bridge.
 
-   A publisher Node for the speed can be created by :
-   ```bash
-   ros2 run projetIA speed_publisher
-   ```
+2. The simulation can be interacted with manually:
+   - The speed and position of the joints can be retrieved on the ROS `/joint_states` topic:
+     - Using a node subscribed to the right topics:
+       ```bash
+       ros2 run projetIA state_subscriber
+       ```
+     - Manually:
+       ```bash
+       ros2 topic echo /joint_states
+       ```
+   - The velocity of the trolley can be set by publishing a float to the topic `/trolley_speed_cmd`:
+     - Using a node publishing to the right topics:
+       ```bash
+       ros2 run projetIA speed_publisher
+       ```
+     - Manually:
+       ```bash
+       ros2 topic pub /trolley_speed_cmd std_msgs/msg/Float64 "data: 4.0"
+       ```
+   - The simulation can be started, paused, and reset by publishing on the ROS topic `/world/default/control`:
+     - Using a node:
+       ```bash
+       ros2 run projetIA world_control
+       ```
+
+3. Training can be launched by running the file `src/projetIA/projetIA/main.py` (set the different parameters in this file).
+
+4. It is possible to evaluate a policy by running the file `src/projetIA/projetIA/eval_policy.py` (set the different parameters in this file).
+
 
 
 ## Training Methodology

@@ -34,7 +34,7 @@ class StateSubscriber(Node):
         self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
         self.double_pendulum = double_pendulum
         if self.double_pendulum:
-            self.state = np.zeros(7)
+            self.state = np.zeros(8)
         else:
             self.state = np.zeros(5)
         self.starting_up = starting_up
@@ -53,7 +53,7 @@ class StateSubscriber(Node):
         """Read the state of the joints and return it. 
 
         Returns:
-            state (numpy.ndarray): A 1D array of size 5 that holds the state of the joints and trolley.
+            state (numpy.ndarray): A 1D array that holds the state of the joints and trolley.
               for double pendulum, state contains [cos(theta1), sin(theta1), theta1_dot, cos(theta2), sin(theta2), theta2_dot, x, x_dot]
               for single pendulum, state contains [cos(theta), sin(theta), theta_dot, x, x_dot]
         """
