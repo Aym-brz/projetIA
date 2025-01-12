@@ -217,11 +217,11 @@ def train(policy:FeedForwardNetwork, env:PendulumEnv, num_episodes:int=1000, sav
                     agent.update(agent.best, agent.BATCH_SIZE)
         
         # print(f"Épisode {episode + 1}/{num_episodes}, Récompense totale : {total_episode_reward}")
-        # Afficher le résultat périodiquement
-        if (episode + 1) % 10 == 0:
-            torch.save(policy.state_dict(), f"{save_path}/policy_REINFORCE_{episode+1}.pth")
+        # # Save the NN periodically
+        # if (episode + 1) % 10 == 0:
+        #     torch.save(policy.state_dict(), f"{save_path}/policy_REINFORCE_{episode+1}.pth")
 
-    # Sauvegarde finale du modèle
+    # Final save
     torch.save(policy.state_dict(), f"{save_path}/final_policy_REINFORCE.pth")
     print(f"Entraînement terminé. Modèle sauvegardé dans {save_path}")  
     print('Complete')

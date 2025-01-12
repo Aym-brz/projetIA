@@ -12,13 +12,44 @@ from train_pendulum_DQN import train as train_DQN
 from train_pendulum_reinforce import train as train_reinforce
 
 def get_best_model_path(load_path):
+    """
+    Returns the path of the best saved policy model in the given directory.
+    Arg:
+        load_path (str): The path to the directory containing the saved models.
+    """
     files = glob.glob(os.path.join(load_path, "best_*.pth"))
     if not files:
         raise FileNotFoundError("No saved policies found.")
     best_file = max(files, key=lambda f: float(re.findall(r"[-+]?\d*\.\d+|\d+", f)[-1]))
     return best_file
 
+
 def main():
+    """
+    Main function to configure, train, and evaluate pendulum control policies.
+
+    This function sets up the environment and parameters for training and evaluating
+    reinforcement learning policies for controlling a pendulum. It handles both Deep Q-Network 
+    (DQN) and REINFORCE methods, allowing for training and evaluation of both single and double 
+    pendulum setups.
+
+    Configurable parameters include:
+    - The type of pendulum (single or double).
+    - Whether to train and/or evaluate the policy.
+    - The choice of algorithm (DQN or REINFORCE).
+    - Paths for loading and saving models.
+    - Various hyperparameters for training.
+
+    The function initializes the ROS2 environment, sets up the pendulum environment, and 
+    determines the state and action dimensions based on the chosen configuration. It then 
+    performs training if specified, using the appropriate algorithm, and plots the results.
+    
+    If evaluation is enabled, it loads the best policy model and evaluates its performance.
+
+    Raises:
+        FileNotFoundError: If there are no saved policies available for loading.
+    """
+
     double_pendulum = True
     starting_up = False
     training = True
@@ -56,22 +87,22 @@ def main():
             'MEM_SIZE': 10000,           # memory size
             'BATCH_SIZE': 15,            # size of batches (in episodes)
             'STDDEV_START': 1.0,         # standard deviation for sampling actions
-            'STDDEV_END': 0.2,          # final standard deviation
+            'STDDEV_END': 0.2,           # final standard deviation
         })
 
 
-    # Initialisation de l'environnement
+    # Environnement init
     rclpy.init()
     env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up, DQN=DQN)
 
-    # Vérification des dimensions d'état et d'action
-    state_dim = env.observation_space.shape[0]  # 7 pour le double pendule, 5 pour le simple
+    # State and action dimensions check
+    state_dim = env.observation_space.shape[0]      # 7 for double pendule, 5 for simple pendule
     if DQN:
         action_dim = env.action_space.n
     else:
-        action_dim = env.action_space.shape[0]      # 1 pour la vitesse du chariot
+        action_dim = env.action_space.shape[0]      # 1 for the trolley speed
 
-    print(f"Dimensions de l'état : {state_dim}, Dimensions de l'action : {action_dim}")
+    print(f"State dimension : {state_dim}, Action dimension : {action_dim}")
     
     if training:
         if DQN:    
@@ -87,26 +118,25 @@ def main():
             total_rewards = train_DQN(policy_net, target_net, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
         
         else:
-            # Initialisation de la politique
+            # Policy init
             policy = FeedForwardNetwork(double_pendulum=double_pendulum)
             try:
                 policy.load_state_dict(torch.load(load_path))
             except:
                 print('No policy found, training from scratch') 
             total_rewards = train_reinforce(policy, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
-        # Entraînement de la politique
 
-        # Affichage des résultats
+        # Plot of results
         plt.plot(total_rewards)
-        plt.title("Évolution des récompenses totales")
-        plt.xlabel("Épisode")
-        plt.ylabel("Récompense totale")
+        plt.title("Evolution of total rewards") 
+        plt.xlabel("Episodes")
+        plt.ylabel("Total rewards")
         plt.grid()
         plt.show()
     if evaluating:
-        # Charger le modèle sauvegardé
+        # Load the saved model
         if DQN:
-            policy = DQN_NN(state_dim, action_dim)  # Créer une nouvelle instance de Policy
+            policy = DQN_NN(state_dim, action_dim)  # Create a new instance of Policy
         else: 
             policy = FeedForwardNetwork(double_pendulum=double_pendulum)
         try:
@@ -115,7 +145,8 @@ def main():
             best_policy_path = get_best_model_path(load_path)
         print(f'testing policy {best_policy_path}')
         policy.load_state_dict(torch.load(best_policy_path))
-        # Évaluation de la politique entraînée
+
+        # Evaluate the policy
         evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=800, plot=True)
 
 if __name__ == "__main__":
