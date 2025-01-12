@@ -11,8 +11,9 @@ Création d'un workspace (https://docs.ros.org/en/jazzy/Tutorials/Beginner-Clien
 
 à partir des fichiers de démo: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_sim_demos
 
-création du fichier pour décrire le pendule et son environment
-création du fichier bridge_config.yaml, pour faire le lien entre gazebo et ROS
+création du fichier pour décrire le pendule et son environment: https://gazebosim.org/docs/latest/sdf_worlds/
+création du fichier bridge_config.yaml, pour faire le lien entre gazebo et ROS: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_bridge
+la création du bridge pour un service n'est pas disponible via l'API python, il faut donc lancer une ligne de commande à la main
 création du fichier pendulum.launch.py, qui lance la simulation avec ROS et gazebo reliés.
 => le double pendule est simulé et publie les positions et vitesse sur les topics ROS
 
@@ -21,12 +22,10 @@ https://gazebosim.org/api/sim/8/jointcontrollers.htmls
 création du fichier speed_publisher.py, mise à jour de bridge_config.yaml et pendulum.launch.py et setup.py pour définir le fichier speed_publisher comme porte entrée. 
 => le double pendule bouge à la vitesse définie initialement dans speed_publisher
 
-de la même manière, création d'un noeud pour controler la postion des deux pivots, de manière à initialiser le pendule dans une position aléatoire.
 
-crétion du noeud ros state subscriber, pour lire l'état des joints. state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
-=> reste à extraire les bonnes données
+crétion du noeud ros state subscriber, pour lire l'état des joints et formater les données. state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
 
-création du noeud
+création du noeud world control, et lancement du bridge pour les services à l'aide de 
 
 
 Fix the bridge for the world control service 
@@ -204,7 +203,7 @@ projectroot
    ```
    This will launch the simulation, as well as the Gazebo - ROS bridge.
 
-2. The simulation can be interacted with manually:
+2. The simulation can be interacted with manually, to check that everything work correctly.
    - The speed and position of the joints can be retrieved on the ROS `/joint_states` topic:
      - Using a node subscribed to the right topics:
        ```bash
@@ -269,7 +268,13 @@ Example 3:
 ## Sources and inspirations
 - RL definition: https://www.ibm.com/think/topics/reinforcement-learning
 - RL: https://www.sciencedirect.com/science/article/abs/pii/S0952197623017025
+- Gym environment documentation: https://www.gymlibrary.dev/api/core/
 - PPO: https://github.com/ericyangyu/PPO-for-Beginners 
-- DQN: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0280071 
+- DQN: 
+   - https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0280071, 
+   - https://github.com/pytorch/tutorials/blob/main/intermediate_source/reinforcement_q_learning.py
 - Reinforce (and DDQP + DQN) : https://github.com/fredrikmagnus/RL-for-Inverted-Pendulum
-- DDPG : https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/rl/ipynb/ddpg_pendulum.ipynb , https://github.com/openai/spinningup/blob/master/docs/algorithms/ddpg.rst
+- DDPG : 
+   - https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/rl/ipynb/ddpg_pendulum.ipynb
+   - https://github.com/openai/spinningup/blob/master/docs/algorithms/ddpg.rst
+

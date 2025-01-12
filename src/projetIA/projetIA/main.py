@@ -6,29 +6,36 @@ from network import FeedForwardNetwork
 from network import DQN_NN
 from eval_policy import evaluate_policy
 import os
+import glob
+import re
+from train_pendulum_DQN import train as train_DQN
+from train_pendulum_reinforce import train as train_reinforce
 
-# choose the training method : 
-DQN = True
-
-if DQN:
-    from train_pendulum_DQN import train
-else:
-    from train_pendulum_reinforce import train
+def get_best_model_path(load_path):
+    files = glob.glob(os.path.join(load_path, "best_*.pth"))
+    if not files:
+        raise FileNotFoundError("No saved policies found.")
+    best_file = max(files, key=lambda f: float(re.findall(r"[-+]?\d*\.\d+|\d+", f)[-1]))
+    return best_file
 
 def main():
     double_pendulum = True
     starting_up = False
+    training = True
+    evaluating = True
+    DQN = True
     
-    load_path = "best_trained_single_pendulum_policy.pth" # model to load to resume training
-    save_path= f"saved_policies/double_pendulum/DQN/starting_down" # path to save the models
+    load_path = f"saved_policies/double_pendulum/DQN/starting_down" # model to load to resume training
+    save_path = f"saved_policies/double_pendulum/DQN/starting_down" # path to save the models
     if not os.path.exists(save_path):
         os.makedirs(save_path)
         
-    num_episodes = 10000 # number of training episodes
+    num_episodes = 5000 # number of training episodes
+    
     # Hyperparamètres
     hyperparameters = {
         'MAX_EPISODE_LENGTH': 800,  # maximum length of an episode
-        'NUM_SIM_STEPS': 5,         # number of simulation steps for each action
+        'NUM_SIM_STEPS': 1 if double_pendulum else 5,         # number of simulation steps for each action
     }
     
     if DQN:
@@ -65,49 +72,51 @@ def main():
         action_dim = env.action_space.shape[0]      # 1 pour la vitesse du chariot
 
     print(f"Dimensions de l'état : {state_dim}, Dimensions de l'action : {action_dim}")
-
-    if DQN:    
-        policy_net = DQN_NN(state_dim, action_dim)
-        target_net = DQN_NN(state_dim, action_dim)
-        try:
-            policy_net.load_state_dict(torch.load("saved_policies/DQN speed 4.5 timesteps 1/best_policy_net_DQN.pth"))
-            target_net.load_state_dict(torch.load("saved_policies/DQN speed 4.5 timesteps 1/best_target_net_DQN.pth"))
-            print("Loaded saved best policies.")
-        except FileNotFoundError:
+    
+    if training:
+        if DQN:    
+            policy_net = DQN_NN(state_dim, action_dim)
+            target_net = DQN_NN(state_dim, action_dim)
             try:
-                policy_net.load_state_dict(torch.load("saved_policies/policy_net_DQN.pth"))
-                target_net.load_state_dict(torch.load("saved_policies/target_net_DQN.pth"))
-                print("Loaded saved policies.")
+                best_policy_path = get_best_model_path(load_path)
+                policy_net.load_state_dict(torch.load(best_policy_path))
+                print(f"Loaded saved best policies from {best_policy_path}.")
+                target_net.load_state_dict(torch.load(best_policy_path.replace("policy", "target")))
             except FileNotFoundError:
                 print("No saved policies found. Starting training from scratch.")
-        total_rewards = train(policy_net, target_net, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
-    else:
-        # Initialisation de la politique
-        policy = FeedForwardNetwork(double_pendulum=double_pendulum)
+            total_rewards = train_DQN(policy_net, target_net, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
+        
+        else:
+            # Initialisation de la politique
+            policy = FeedForwardNetwork(double_pendulum=double_pendulum)
+            try:
+                policy.load_state_dict(torch.load(load_path))
+            except:
+                print('No policy found, training from scratch') 
+            total_rewards = train_reinforce(policy, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
+        # Entraînement de la politique
+
+        # Affichage des résultats
+        plt.plot(total_rewards)
+        plt.title("Évolution des récompenses totales")
+        plt.xlabel("Épisode")
+        plt.ylabel("Récompense totale")
+        plt.grid()
+        plt.show()
+    if evaluating:
+        # Charger le modèle sauvegardé
+        if DQN:
+            policy = DQN_NN(state_dim, action_dim)  # Créer une nouvelle instance de Policy
+        else: 
+            policy = FeedForwardNetwork(double_pendulum=double_pendulum)
         try:
-            policy.load_state_dict(torch.load(load_path))
-        except:
-            print('No policy found, training from scratch') 
-        total_rewards = train(policy, env, num_episodes=num_episodes, save_path=save_path, hyperparameters=hyperparameters) 
-
-
-    # Entraînement de la politique
-
-    # Affichage des résultats
-    plt.plot(total_rewards)
-    plt.title("Évolution des récompenses totales")
-    plt.xlabel("Épisode")
-    plt.ylabel("Récompense totale")
-    plt.grid()
-    plt.show()
-
-    # Charger le modèle sauvegardé
-    policy = FeedForwardNetwork(double_pendulum=double_pendulum)  # Créer une nouvelle instance de Policy
-    policy.load_state_dict(torch.load('best_'+save_path))  # Charger les poids
-
-    # Évaluation de la politique entraînée
-    evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=800, plot=True)
-
+            best_policy_path = get_best_model_path(save_path)
+        except FileNotFoundError:
+            best_policy_path = get_best_model_path(load_path)
+        print(f'testing policy {best_policy_path}')
+        policy.load_state_dict(torch.load(best_policy_path))
+        # Évaluation de la politique entraînée
+        evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=800, plot=True)
 
 if __name__ == "__main__":
     main()

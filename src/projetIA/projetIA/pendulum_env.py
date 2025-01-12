@@ -47,7 +47,7 @@ class PendulumEnv(gym.Env, Node):
         state = self.state
         if self.double_pendulum:
             # state contains [cos(theta1), sin(theta1), theta1_dot, cos(theta2), sin(theta2), theta2_dot, x, x_dot]
-            reward = 1/2 * (1 - state[0]) + 1/2 *(1 + state[3]) - (abs(state[-2])/5)**2
+            reward = 1/4 * (1 - state[0]) + 1/4 *(1 + state[3]) - (abs(state[-2])/5)**2
         else:
             # state contains [cos(theta), sin(theta), theta_dot, x, x_dot]
             reward = 1/2 * (1 - state[0]) - (abs(state[-2])/5)**2
@@ -86,7 +86,7 @@ class PendulumEnv(gym.Env, Node):
             print("Angular velocity too high")
             self.done = True
         
-        if self.double_pendulum and abs(self.state[5]) >= 20:
+        if self.double_pendulum and abs(self.state[5]) >= 30:
             print("Angular velocity too high")
             self.done = True
         return self.state, reward, self.done, self.done, {}

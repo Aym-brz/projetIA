@@ -181,6 +181,7 @@ def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:
     - hyperparameters: dictionary containing the following hyperparameters:
         - BATCH_SIZE: batch size (in episodes).
         - MAX_EPISODE_LENGTH: maximum length of an episode.
+        - NUM_SIM_STEPS: number of simulation step per action
         - GAMMA: discount factor.
         - LR: learning rate.
         - MEM_SIZE: memory size.
@@ -237,10 +238,10 @@ def train(policy_net: DQN_NN, target_net: DQN_NN, env:PendulumEnv, num_episodes:
             best_reward = total_episode_reward
             torch.save(policy_net.state_dict(), f"{save_path}/best_policy_DQN_{best_reward:.2f}.pth")
             torch.save(target_net.state_dict(), f"{save_path}/best_target_DQN_{best_reward:.2f}.pth")
-        # Save the model every 10 episodes
-        if i_episode % 10 == 0:
-            torch.save(policy_net.state_dict(), f"{save_path}/policy_DQN_{i_episode}_{total_episode_reward:.2f}.pth")
-            torch.save(target_net.state_dict(), f"{save_path}/target_DQN_{i_episode}_{total_episode_reward:.2f}.pth")
+        # # Save the model every 10 episodes
+        # if i_episode % 10 == 0:
+        #     torch.save(policy_net.state_dict(), f"{save_path}/policy_DQN_{i_episode}_{total_episode_reward:.2f}.pth")
+        #     torch.save(target_net.state_dict(), f"{save_path}/target_DQN_{i_episode}_{total_episode_reward:.2f}.pth")
     print('Complete')
     agent.plot_reward(show_result=True)
     plt.savefig(f"{save_path}/DQN_training.png")
