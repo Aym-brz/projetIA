@@ -233,6 +233,8 @@ projectroot
 4. It is possible to evaluate a policy by running the file `src/projetIA/projetIA/eval_policy.py` (set the different parameters in this file).
 
 
+https://github.com/user-attachments/assets/d1cfd3cd-00e4-4f16-bdd5-1c643b5e6a2d
+
 
 ## Training Methodology
 The pendulum starts on the stable low position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations.
