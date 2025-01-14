@@ -6,15 +6,15 @@ This project aims to simulate and train a single/double pendulum on a rail to ba
 
 - Simulates a double pendulum on a rail in Gazebo.
 - Uses ROS 2 for interfacing sensor data and controlling the pendulum.
--Reinforcement learning setup using Gymnasium-compatible environments.
--Dynamic control, data publishing, and state monitoring nodes.
+- Reinforcement learning setup using Gymnasium-compatible environments.
+- Dynamic control, data publishing, and state monitoring nodes.
 
 ## Prerequisites
 This project has been developped under Ubuntu 24.04 LTS. We didn't manage to make Gazebo work in WSL.
 
 Requires Python 3.12
 
-Before running the project, ensure you have python 3 installed, as well as:
+Before running the project, ensure you the following installed.
 1. **ROS 2** (version jazzy)  
 2. **Gazebo** (version harmonic)  
 3. **ros-gz bridge** 
@@ -22,7 +22,7 @@ Before running the project, ensure you have python 3 installed, as well as:
 The following instructions work for Ubuntu 24.04 LTS (Noble)
 
 ### Install ROS 2 Jazzy 
-[Installation instructions](https://docs.ros.org/en/jazzy/Installation/)
+The following intructions are extracted from the official [installation instructions](https://docs.ros.org/en/jazzy/Installation/)
 
 Make sure you have a locale which supports UTF-8. If you are in a minimal environment (such as a docker container), the locale may be something minimal like POSIX.
 ```bash
@@ -67,7 +67,7 @@ source ~/.bashrc
 ```
 
 ### Install Gazebo Harmonic 
-[Installation instructions](https://gazebosim.org/docs/harmonic/install_ubuntu/) 
+The following intructions are extracted from the official [installation instructions](https://gazebosim.org/docs/harmonic/install_ubuntu/) 
 
 ```bash
 sudo apt-get install curl lsb-release gnupg
@@ -195,24 +195,25 @@ https://github.com/user-attachments/assets/d1cfd3cd-00e4-4f16-bdd5-1c643b5e6a2d
 ## Training Methodology
 The pendulum starts on the stable low position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations.
 ## Reward Function
+We tried the following reward functions:
 
-Example 1:
-- **Positive Terms**:
-  - Maintaining angles near the upright position for both pendulum links.
-  - Maintaining position near the center for the trolley.
-- **No Penalty for Failures**: The pendulum resets at the stable low position after each training episode.
+- First version:
+  - **Positive Terms**:
+    - Maintaining angles near the upright position for both pendulum links.
+    - Maintaining position near the center for the trolley.
+  - **No Penalty for Failures**
 
-Example 2:
-- **Negative Terms**:
-  - Angles far the upright position for both pendulum links.
-  - Position far the center for the trolley.
-- **Penalty for Failures**: Simulation reset after failure + penalty if the trolley reach the border.
+- Second version:
+  - **Stability Terms**:
+    - Instability compute as Maintaining angles near the upright position and Maintaining position near the center for the trolley.
+    - Stability as the exponential of the negative instability: the stability will increase the reward function if it is near the goal, and decrease the reward funtion if it is away from the goal.
+  - **Force punishment**: Derivative of the speed, this will dismunish the reward function if there is too much variation in the speed.
+  - **Penalty for Failures**: Simulation reset after failure + penalty if the trolley reach the border.
 
-Example 3:
-- **Stability Terms**:
-  - Instability compute as Maintaining angles near the upright position and Maintaining position near the center for the trolley.
-  - Stability as the exponential of the negative instability: the stability will increase the reward function if it is near the goal, and decrease the reward funtion if it is away from the goal.
-- **Force punishment**: Derivative of the speed, this will dismunish the reward function if there is too much variation in the speed.
+- Final version:
+  - **Positive Terms**: Angles close to upright position for both pendulum links.  
+  - **Negative Terms**: Position far the center for the trolley.
+  - **Penalty for Failures**: Simulation reset after failure + penalty if the trolley reach the border.
 
 
 ## Improvement
