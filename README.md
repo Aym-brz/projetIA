@@ -191,6 +191,11 @@ projectroot
 
 https://github.com/user-attachments/assets/d1cfd3cd-00e4-4f16-bdd5-1c643b5e6a2d
 
+Stability test, applying a force through the Gazebo UI (recording the screen significantly impacted the simulation performance, forcing us to record indirectly):
+
+https://github.com/user-attachments/assets/d1b557f0-6838-49be-af98-7bc6c8f91b20
+
+
 
 ## Training Methodology
 The pendulum starts on the stable low position. The reinforcement learning algorithm encourages the pendulum to reach and maintain an inverted balance through reward-based feedback. No supervised learning is used; instead, the reward function incentivizes minimizing angular deviations.
