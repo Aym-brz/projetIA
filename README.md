@@ -1,50 +1,3 @@
-Installation des elements nécessaires
-Documentation pour installer gazebo et ros : utiliser ros2 jazzy et gazebo harmonic en suivant ceci : https://gazebosim.org/docs/all/ros_installation/
-
-Installation de ROS jazzy 
-https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html 
-
-installation de gazebo harmonic : 
-https://gazebosim.org/docs/harmonic/install_windows/ 
-
-Création d'un workspace (https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html) et d'un package (https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html) ros 
-
-à partir des fichiers de démo: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_sim_demos
-
-création du fichier pour décrire le pendule et son environment: https://gazebosim.org/docs/latest/sdf_worlds/
-création du fichier bridge_config.yaml, pour faire le lien entre gazebo et ROS: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_bridge
-la création du bridge pour un service n'est pas disponible via l'API python, il faut donc lancer une ligne de commande à la main
-création du fichier pendulum.launch.py, qui lance la simulation avec ROS et gazebo reliés.
-=> le double pendule est simulé et publie les positions et vitesse sur les topics ROS
-
-
-https://gazebosim.org/api/sim/8/jointcontrollers.htmls
-création du fichier speed_publisher.py, mise à jour de bridge_config.yaml et pendulum.launch.py et setup.py pour définir le fichier speed_publisher comme porte entrée. 
-=> le double pendule bouge à la vitesse définie initialement dans speed_publisher
-
-
-crétion du noeud ros state subscriber, pour lire l'état des joints et formater les données. state_subscriber.py, mise à jour de setup.py pour définir le fichier speed_publisher comme porte entrée. 
-
-création du noeud world control, et lancement du bridge pour les services à l'aide de 
-
-
-Fix the bridge for the world control service 
-   
-   can be started through ROS with 
-
-   ```bash
-   ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld
-   ```
-   
-   or equivalently 
-   ```bash
-   ros2 run ros_gz_bridge parameter_bridge /world/default/control@ros_gz_interfaces/srv/ControlWorld@gz.msgs.WorldControl@gz.msgs.Boolean
-   ```
-   with the shape : 
-   ```bash
-   parameter_bridge <service@ROS2_srv_type[@Ign_req_type@Ign_rep_type]> 
-   ```
-
 # Double Pendulum on Rail Simulation
 
 This project aims to simulate and train a single/double pendulum on a rail to balance itself in an inverted position using reinforcement learning. The simulation is implemented in Gazebo and Pytorch, with ROS 2 serving as the middleware interface.
@@ -53,16 +6,18 @@ This project aims to simulate and train a single/double pendulum on a rail to ba
 
 - Simulates a double pendulum on a rail in Gazebo.
 - Uses ROS 2 for interfacing sensor data and controlling the pendulum.
-- Incorporates Pytorch to define and implement reinforcement learning logic.
+-Reinforcement learning setup using Gymnasium-compatible environments.
+-Dynamic control, data publishing, and state monitoring nodes.
 
 ## Prerequisites
+This project has been developped under Ubuntu 24.04 LTS. We didn't manage to make Gazebo work in WSL.
 
 Requires Python 3.12
 
 Before running the project, ensure you have python 3 installed, as well as:
 1. **ROS 2** (version jazzy)  
 2. **Gazebo** (version harmonic)  
-3. **ros-gazebo bridge** 
+3. **ros-gz bridge** 
 
 The following instructions work for Ubuntu 24.04 LTS (Noble)
 
@@ -136,8 +91,8 @@ sudo apt-get install ros-jazzy-ros-gz
 
 Create a new virtual environment and add all the required packages to it.
 ```bash
-python3 -m venv projetIA.venv
-source projetIA.venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -184,9 +139,10 @@ projectroot
 │   │   └── network.py                    # Structure of the neural networks
 │   │   └── state_subscriber.py           # ROS node to read the speeds and positions
 │   │   └── speed_publisher.py            # ROS node to publish the speed of the trolley
-│   │   └── pendulum_env.py               # Training environment, containing the reward function
+│   │   └── pendulum_env.py               # Creating Gymnasium environment, starts all the ROS nodes required
+│   │   └── train_pendulum_reinforce.py   # Training script for DQN
+│   │   └── train_pendulum_reinforce.py   # Training script for REINFORCE algorithm
 │   │   └── train_pendulum.py             # Training script (not working, implementation of reinforce)
-│   │   └── train_pendulum_reinforce.py   # Training script
 │   │   └── world_control.py              # ROS node to start, pause and reset the simulation
 │   ├── setup.py                       # Setup script for the ROS 2 package
 │   └── package.xml                    # ROS 2 package metadata
@@ -228,9 +184,9 @@ projectroot
        ros2 run projetIA world_control
        ```
 
-3. Training can be launched by running the file `src/projetIA/projetIA/main.py` (set the different parameters in this file).
+3. Training or evaluating a policy can be launched by running the file `src/projetIA/projetIA/main.py` (set the different parameters in this file).
 
-4. It is possible to evaluate a policy by running the file `src/projetIA/projetIA/eval_policy.py` (set the different parameters in this file).
+4. It is also possible to evaluate a policy by running the file `src/projetIA/projetIA/eval_policy.py`
 
 
 https://github.com/user-attachments/assets/d1cfd3cd-00e4-4f16-bdd5-1c643b5e6a2d
@@ -268,6 +224,7 @@ Example 3:
 
 
 ## Sources and inspirations
+- ros-gz: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_sim_demos
 - RL definition: https://www.ibm.com/think/topics/reinforcement-learning
 - RL: https://www.sciencedirect.com/science/article/abs/pii/S0952197623017025
 - Gym environment documentation: https://www.gymlibrary.dev/api/core/

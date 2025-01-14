@@ -1,6 +1,6 @@
 
 """
-This module defines a custom OpenAI Gym environment for controlling a pendulum in a Gazebo simulation.
+This module defines a custom OpenAI Gymnasium environment for controlling the pendulum in a Gazebo simulation.
 The environment is compatible with both single and double pendulum setups and can be used with 
 Deep Q-Network (DQN) or continuous action spaces.
 Classes:
