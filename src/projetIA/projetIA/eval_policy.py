@@ -55,14 +55,14 @@ def main():
     rclpy.init()
     double_pendulum = False
     starting_up = False
-    max_iter = 3000
+    max_iter = 100000
     is_DQN = True
     
 
     # Initialisation de l'environnement
     env = PendulumEnv(double_pendulum=double_pendulum, starting_up=starting_up, DQN=is_DQN)
 
-    save_path="saved_policies/DQN/starting_down/policy_DQN_2940.pth"
+    save_path="saved_policies/single_pendulum/DQN/starting_down/policy_DQN_2930.pth"
     # Charger le modèle sauvegardé
     if is_DQN:
         policy = DQN_NN(env.observation_space.shape[0], env.action_space.n)
@@ -71,7 +71,7 @@ def main():
     
     policy.load_state_dict(torch.load(save_path))  # Charger les poids
     # Évaluation de la politique entraînée
-    evaluation_rewards = evaluate_policy(policy, env, num_episodes=10, max_iter=max_iter, num_sim_step=5, plot=True)
+    evaluation_rewards = evaluate_policy(policy, env, num_episodes=1, max_iter=max_iter, num_sim_step=1, plot=True)
     
 if __name__ == "__main__":
     main()
