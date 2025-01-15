@@ -188,13 +188,33 @@ projectroot
 
 4. It is also possible to evaluate a policy by running the file `src/projetIA/projetIA/eval_policy.py`
 
-
 https://github.com/user-attachments/assets/d1cfd3cd-00e4-4f16-bdd5-1c643b5e6a2d
 
 Stability test, applying a force through the Gazebo UI (recording the screen significantly impacted the simulation performance, forcing us to record indirectly):
 
 https://github.com/user-attachments/assets/d1b557f0-6838-49be-af98-7bc6c8f91b20
 
+To replicate these videos, follow these steps:
+
+1. Launch a Gazebo simulation with a simple pendulum starting downwards:
+  ```bash
+  ros2 launch projetIA simple_pendulum.launch.py
+  ```
+
+2. Run the `eval_policy` script with the following settings in the main function:
+  ```python
+  double_pendulum = False
+  starting_up = False
+  max_iter = 10000
+  is_DQN = True
+  save_path = "saved_policies/single_pendulum/DQN/starting_down/policy_DQN_2930.pth"
+  ```
+
+3. Apply a force to the pendulum using the "Apply Force Torque" section in Gazebo:
+  - Click on the three dots in the top right corner of the Gazebo window to display this section.
+  - Click on the pendulum and select "upper_link" from the link list.
+  - Set the force magnitude in the Y direction.
+  - Click the "Apply Force" button will apply the force for a short duration.
 
 
 ## Training Methodology
